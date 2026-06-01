@@ -2,6 +2,7 @@ import type { CollectionConfig } from "payload";
 
 export const Subscriptions: CollectionConfig = {
     slug: 'subscriptions',
+    trash: true,
     access: {
         read: () => true,
     },

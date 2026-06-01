@@ -2,6 +2,7 @@ import type { CollectionConfig } from "payload";
 
 export const ContactSubmissions: CollectionConfig = {
     slug: 'contact-submissions',
+    trash: true,
     access: {
         read: () => true,
     },

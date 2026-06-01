@@ -7,6 +7,7 @@ import { FAQ } from '../blocks/FAQ'
 
 export const Pages: CollectionConfig = {
   slug: 'pages',
+  trash: true,
   admin: {
     useAsTitle: 'title',
   },

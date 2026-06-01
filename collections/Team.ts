@@ -2,6 +2,7 @@ import type { CollectionConfig } from "payload";
 
 export const Team: CollectionConfig = {
     slug: 'team',
+    trash: true,
     access: {
         read: () => true,
     },
