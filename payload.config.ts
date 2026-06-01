@@ -11,6 +11,7 @@ import { Pages } from "./collections/Pages";
 import { Products } from "./collections/Products";
 import { Categories } from "./collections/Categories";
 import { ContactSubmissions } from "./collections/ContactSubmissions";
+import { Subscriptions } from "./collections/Subscriptions";
 import { Team } from "./collections/Team";
 
 const filename = fileURLToPath(import.meta.url);
@@ -23,7 +24,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Pages, Products, ContactSubmissions, Categories, Team],
+  collections: [Users, Media, Pages, Products, ContactSubmissions, Subscriptions, Categories, Team],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {

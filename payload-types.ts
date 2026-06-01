@@ -72,6 +72,7 @@ export interface Config {
     pages: Page;
     products: Product;
     'contact-submissions': ContactSubmission;
+    subscriptions: Subscription;
     categories: Category;
     team: Team;
     'payload-kv': PayloadKv;
@@ -86,6 +87,7 @@ export interface Config {
     pages: PagesSelect<false> | PagesSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
     'contact-submissions': ContactSubmissionsSelect<false> | ContactSubmissionsSelect<true>;
+    subscriptions: SubscriptionsSelect<false> | SubscriptionsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     team: TeamSelect<false> | TeamSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -274,6 +276,21 @@ export interface ContactSubmission {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subscriptions".
+ */
+export interface Subscription {
+  id: string;
+  name: string;
+  email: string;
+  plan: 'basic' | 'premium' | 'enterprise';
+  status: 'active' | 'cancelled' | 'expired';
+  startDate: string;
+  endDate?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "categories".
  */
 export interface Category {
@@ -342,6 +359,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'contact-submissions';
         value: string | ContactSubmission;
+      } | null)
+    | ({
+        relationTo: 'subscriptions';
+        value: string | Subscription;
       } | null)
     | ({
         relationTo: 'categories';
@@ -508,6 +529,20 @@ export interface ContactSubmissionsSelect<T extends boolean = true> {
   name?: T;
   email?: T;
   message?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "subscriptions_select".
+ */
+export interface SubscriptionsSelect<T extends boolean = true> {
+  name?: T;
+  email?: T;
+  plan?: T;
+  status?: T;
+  startDate?: T;
+  endDate?: T;
   updatedAt?: T;
   createdAt?: T;
 }
