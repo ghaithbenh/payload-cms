@@ -1,6 +1,7 @@
 {
   "name": "payload",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,7 +10,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@payloadcms/db-mongodb": "^3.85.0",
+    "@payloadcms/next": "^3.85.0",
+    "@payloadcms/richtext-lexical": "^3.85.0",
+    "graphql": "^16.14.0",
     "next": "16.2.6",
+    "payload": "^3.85.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
