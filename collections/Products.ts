@@ -20,6 +20,12 @@ export const Products: CollectionConfig = {
             name: "description",
             type: "text",
             required: true,
+            admin: {
+                components: {
+                    Field: '/components/CustomField#CustomField',
+                    Cell: '/components/CustomCell#CustomCell',
+                },
+            },
         },
         {
             name: "image",
@@ -28,4 +34,4 @@ export const Products: CollectionConfig = {
             required: true,
         },
     ],
-}
+}

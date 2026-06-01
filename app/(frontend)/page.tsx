@@ -1,7 +1,6 @@
 import { headers as getHeaders } from 'next/headers.js'
 import Image from 'next/image'
 import { getPayload } from 'payload'
-import React from 'react'
 import { fileURLToPath } from 'url'
 
 import config from '@/payload.config'
@@ -67,15 +66,7 @@ export default async function HomePage() {
           </div>
         )}
       </div>
-      <div className="flex items-center gap-2 font-mono text-[0.7rem] text-muted max-lg:flex-col max-lg:gap-1.5">
-        <p className="m-0">Update this page by editing</p>
-        <a
-          className="no-underline px-2 py-0.5 bg-surface border border-rule font-mono text-[0.65rem] text-dim hover:border-dim hover:text-white transition-all duration-200"
-          href={fileURL}
-        >
-          <code>page.tsx</code>
-        </a>
-      </div>
+
     </div>
   )
 }

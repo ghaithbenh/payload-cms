@@ -18,6 +18,11 @@ export const Pages: CollectionConfig = {
       name: 'title',
       type: 'text',
       required: true,
+      admin: {
+        components: {
+          Field: '/components/CustomField#CustomField',
+        },
+      },
     },
     {
       name: 'slug',
