@@ -392,6 +392,7 @@ export interface Task {
   taskPic?: (string | null) | Media;
   taskDoc?: (string | null) | Document;
   taskVideo?: (string | null) | Video;
+  subscribed?: string | null;
   folder?: (string | null) | FolderInterface;
   updatedAt: string;
   createdAt: string;
@@ -754,6 +755,7 @@ export interface TasksSelect<T extends boolean = true> {
   taskPic?: T;
   taskDoc?: T;
   taskVideo?: T;
+  subscribed?: T;
   folder?: T;
   updatedAt?: T;
   createdAt?: T;

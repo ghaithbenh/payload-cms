@@ -105,5 +105,15 @@ export const Tasks: CollectionConfig = {
                 },
             },
         },
+        {
+            name: "subscribed",
+            type: "text",
+            admin: {
+                components: {
+                    Field: "/components/SubscribeField#SubscribeField",
+                },
+                position: "sidebar",
+            },
+        },
     ],
 };
