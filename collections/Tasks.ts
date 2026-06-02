@@ -19,6 +19,7 @@ export const Tasks: CollectionConfig = {
         read: ({ req }) => {
             const user = req.user;
             if (!user) return false;
+            if (user.role === 'admin') return true;
 
             return {
                 assignedTo: {
@@ -30,6 +31,7 @@ export const Tasks: CollectionConfig = {
         update: ({ req }) => {
             const user = req.user;
             if (!user) return false;
+            if (user.role === 'admin') return true;
 
             return {
                 assignedTo: {
@@ -41,6 +43,7 @@ export const Tasks: CollectionConfig = {
         delete: ({ req }) => {
             const user = req.user;
             if (!user) return false;
+            if (user.role === 'admin') return true;
 
             return {
                 assignedTo: {
@@ -110,7 +113,7 @@ export const Tasks: CollectionConfig = {
             type: "text",
             admin: {
                 components: {
-                    Field: "/components/SubscribeField#SubscribeField",
+                    Field: "@/components/SubscribeField#SubscribeField",
                 },
                 position: "sidebar",
             },

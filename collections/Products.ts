@@ -23,8 +23,8 @@ export const Products: CollectionConfig = {
             required: true,
             admin: {
                 components: {
-                    Field: '/components/CustomField#CustomField',
-                    Cell: '/components/CustomCell#CustomCell',
+                    Field: '@/components/CustomField#CustomField',
+                    Cell: '@/components/CustomCell#CustomCell',
                 },
             },
         },

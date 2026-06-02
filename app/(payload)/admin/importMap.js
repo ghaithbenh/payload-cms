@@ -1,4 +1,4 @@
-import { CustomField as CustomField_5f95ff60c493dce78803275cb3b8b58c } from '../../../components/CustomField'
+import { CustomField as CustomField_5216baece6d145a86ab2c40679a59844 } from '@/components/CustomField'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { LexicalDiffComponent as LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -22,8 +22,8 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
-import { CustomCell as CustomCell_681929361b75a1334fa9ff07c63e0cf6 } from '../../../components/CustomCell'
-import { SubscribeField as SubscribeField_b674f93a8336210c102214903c48d0e7 } from '../../../components/SubscribeField'
+import { CustomCell as CustomCell_6b97409c824facc34b8f97c569c4d772 } from '@/components/CustomCell'
+import { SubscribeField as SubscribeField_56153bfbfa5e4d8a96e110b8f7d3134e } from '@/components/SubscribeField'
 import { default as default_17df66fdb2c4cf7d3682157455ab1197 } from '@/components/admin/OpenAppCell'
 import { FolderTableCell as FolderTableCell_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { FolderField as FolderField_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
@@ -32,7 +32,7 @@ import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } f
 
 /** @type import('payload').ImportMap */
 export const importMap = {
-  "/components/CustomField#CustomField": CustomField_5f95ff60c493dce78803275cb3b8b58c,
+  "@/components/CustomField#CustomField": CustomField_5216baece6d145a86ab2c40679a59844,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#LexicalDiffComponent": LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e,
@@ -56,8 +56,8 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
-  "/components/CustomCell#CustomCell": CustomCell_681929361b75a1334fa9ff07c63e0cf6,
-  "/components/SubscribeField#SubscribeField": SubscribeField_b674f93a8336210c102214903c48d0e7,
+  "@/components/CustomCell#CustomCell": CustomCell_6b97409c824facc34b8f97c569c4d772,
+  "@/components/SubscribeField#SubscribeField": SubscribeField_56153bfbfa5e4d8a96e110b8f7d3134e,
   "@/components/admin/OpenAppCell#default": default_17df66fdb2c4cf7d3682157455ab1197,
   "@payloadcms/next/rsc#FolderTableCell": FolderTableCell_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/next/rsc#FolderField": FolderField_f9c02e79a4aed9a3924487c0cd4cafb1,

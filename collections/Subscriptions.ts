@@ -19,7 +19,7 @@ export const Subscriptions: CollectionConfig = {
             required: true,
             admin: {
                 components: {
-                    Field: '/components/SubscribeField#SubscribeField',
+                    Field: '@/components/SubscribeField#SubscribeField',
                 },
             },
         },

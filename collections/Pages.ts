@@ -21,7 +21,7 @@ export const Pages: CollectionConfig = {
       required: true,
       admin: {
         components: {
-          Field: '/components/CustomField#CustomField',
+          Field: '@/components/CustomField#CustomField',
         },
       },
     },

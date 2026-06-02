@@ -18,10 +18,17 @@ export interface Task {
 }
 
 interface SSEEvent {
-  type: 'connected' | 'task:created' | 'task:updated' | 'task:deleted' | 'ping'
+  type:
+    | 'connected'
+    | 'auth_error'
+    | 'ping'
+    | 'task:created'
+    | 'task:updated'
+    | 'task:deleted'
   userId?: string
   task?: Task
   id?: string
+  message?: string
 }
 
 export interface ToastMessage {
@@ -36,87 +43,79 @@ export function useTaskSubscription() {
   const [error, setError] = useState<string | null>(null)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [toast, setToast] = useState<ToastMessage | null>(null)
-
   const esRef = useRef<EventSource | null>(null)
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const reconnectDelayRef = useRef<number>(1000) // Initial delay of 1s
-  const toastIdRef = useRef<number>(0)
+  const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const delayRef = useRef(1000)
+  const toastIdRef = useRef(0)
 
-  const showToast = useCallback((message: string, type: 'success' | 'info' | 'error') => {
-    const id = ++toastIdRef.current
-    setToast({ id, message, type })
-    // Auto-dismiss after 4 seconds
-    setTimeout(() => {
-      setToast((current) => (current?.id === id ? null : current))
-    }, 4000)
-  }, [])
+  const showToast = useCallback(
+    (message: string, type: 'success' | 'info' | 'error') => {
+      const id = ++toastIdRef.current
+      setToast({ id, message, type })
+      setTimeout(() => {
+        setToast((current) => (current?.id === id ? null : current))
+      }, 4000)
+    },
+    [],
+  )
 
   const fetchInitial = useCallback(async () => {
     try {
       const res = await fetch('/api/tasks')
-      if (!res.ok) throw new Error('Network response not ok')
+      if (!res.ok) return
       const data = await res.json()
-
-      // Deduplicate tasks on initial fetch
-      setTasks((prev) => {
-        const fetchedTasks: Task[] = data.docs || []
-        const taskMap = new Map<string, Task>()
-        fetchedTasks.forEach((t) => taskMap.set(t.id, t))
-        prev.forEach((t) => {
-          if (!taskMap.has(t.id)) {
-            taskMap.set(t.id, t)
-          }
-        })
-        return Array.from(taskMap.values())
-      })
+      setTasks(data.docs || [])
       setError(null)
-    } catch (err) {
-      console.error('[SSE] Failed to load initial tasks:', err)
-      setError('Failed to load tasks')
+    } catch {
+      // silent — SSE will pick up changes
     }
   }, [])
 
-  const connectSSE = useCallback(() => {
+  const connect = useCallback(() => {
     if (esRef.current) {
       esRef.current.close()
+      esRef.current = null
     }
 
-    const es = new EventSource('/api/tasks/subscribe')
+    const es = new EventSource('/api/tasks/subscribe', { withCredentials: true })
     esRef.current = es
 
+    let authFailed = false
+
     es.onopen = () => {
-      console.log('[SSE Client] Connection opened')
-      setConnected(true)
-      setError(null)
-      reconnectDelayRef.current = 1000
-      setLastUpdate(new Date())
-      fetchInitial()
+      delayRef.current = 1000
     }
 
     es.onmessage = (event) => {
       try {
         const data: SSEEvent = JSON.parse(event.data)
-        console.log('[SSE Client] Event received:', data.type, data)
 
         switch (data.type) {
           case 'connected':
             setConnected(true)
             setError(null)
+            fetchInitial()
+            break
+
+          case 'auth_error':
+            authFailed = true
+            setConnected(false)
+            setError(data.message || 'Authentication required')
+            es.close()
             break
 
           case 'ping':
-            // Heartbeat ping received, keep alive
             break
 
           case 'task:created':
             if (data.task) {
               setTasks((prev) => {
-                const alreadyExists = prev.some((t) => t.id === data.task!.id)
-                if (alreadyExists) return prev
+                const exists = prev.some((t) => t.id === data.task!.id)
+                if (exists) return prev
                 return [data.task!, ...prev]
               })
               setLastUpdate(new Date())
-              showToast(`New task created: "${data.task.title}"`, 'success')
+              showToast(`New task: "${data.task.title}"`, 'success')
             }
             break
 
@@ -132,61 +131,48 @@ export function useTaskSubscription() {
                 return [data.task!, ...prev]
               })
               setLastUpdate(new Date())
-              showToast(`Task updated: "${data.task.title}"`, 'info')
+              showToast(`Updated: "${data.task.title}"`, 'info')
             }
             break
 
           case 'task:deleted':
             if (data.id) {
               setTasks((prev) => {
-                const targetTask = prev.find((t) => t.id === data.id)
-                if (targetTask) {
-                  showToast(`Task deleted: "${targetTask.title}"`, 'error')
-                }
+                const target = prev.find((t) => t.id === data.id)
+                if (target) showToast(`Deleted: "${target.title}"`, 'error')
                 return prev.filter((t) => t.id !== data.id)
               })
               setLastUpdate(new Date())
             }
             break
         }
-      } catch (err) {
-        console.error('[SSE Client] Failed to parse event data:', err)
+      } catch {
+        // ignore malformed events
       }
     }
 
-    es.onerror = (err) => {
-      console.error('[SSE Client] EventSource error:', err)
+    es.onerror = () => {
       setConnected(false)
       es.close()
+      esRef.current = null
 
-      const nextDelay = Math.min(reconnectDelayRef.current * 2, 16000)
-      reconnectDelayRef.current = nextDelay
-      setError(`Reconnecting in ${(nextDelay / 1000).toFixed(0)}s...`)
+      if (authFailed) return
 
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current)
-      }
-      reconnectTimeoutRef.current = setTimeout(() => {
-        console.log(`[SSE Client] Attempting reconnect after ${nextDelay}ms`)
-        connectSSE()
-      }, nextDelay)
+      const delay = delayRef.current
+      delayRef.current = Math.min(delay * 2, 16000)
+      setError(`Reconnecting in ${(delay / 1000).toFixed(0)}s...`)
+
+      reconnectRef.current = setTimeout(connect, delay)
     }
   }, [fetchInitial, showToast])
 
   useEffect(() => {
-    connectSSE()
-
+    connect()
     return () => {
-      if (esRef.current) {
-        esRef.current.close()
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current)
-      }
+      if (reconnectRef.current) clearTimeout(reconnectRef.current)
+      if (esRef.current) esRef.current.close()
     }
-  }, [connectSSE])
+  }, [connect])
 
   return { tasks, connected, error, lastUpdate, toast }
 }
-
-

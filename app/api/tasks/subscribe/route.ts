@@ -4,120 +4,132 @@ import config from '@/payload.config'
 export async function GET(request: Request) {
   const payloadConfig = await config
   const payload = await getPayload({ config: payloadConfig })
-
   const { user } = await payload.auth({ headers: request.headers })
-  if (!user) {
-    console.log('[SSE] Unauthorized subscription attempt blocked')
-    return new Response('Unauthorized', { status: 401 })
-  }
 
   const encoder = new TextEncoder()
-  const userId = user.id
-  console.log(`[SSE] Client connected. User ID: ${userId}`)
 
   const stream = new ReadableStream({
     async start(controller) {
-      let isClosed = false
+      let closed = false
 
-      const safeEnqueue = (message: string) => {
-        if (isClosed) return
+      const send = (data: Record<string, unknown>) => {
+        if (closed) return
         try {
-          controller.enqueue(encoder.encode(message))
-        } catch (err) {
-          console.error('[SSE] Failed to enqueue message:', err)
-          cleanup()
-        }
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
+        } catch {}
       }
 
-      // 1. Send initial connection status
-      safeEnqueue(`data: ${JSON.stringify({ type: 'connected', userId })}\n\n`)
+      if (!user) {
+        send({ type: 'auth_error', message: 'Not authenticated. Please log in to the admin panel.' })
+        setTimeout(() => { if (!closed) { closed = true; controller.close() } }, 5000)
+        return
+      }
 
-      let changeStream: any = null
+      send({ type: 'connected', userId: user.id })
 
-      // 2. Setup Keep-alive/Heartbeat Ping every 15s
-      const heartbeatInterval = setInterval(() => {
-        console.log(`[SSE] Sending ping to client: ${userId}`)
-        safeEnqueue(`data: ${JSON.stringify({ type: 'ping' })}\n\n`)
-      }, 15000)
+      const heartbeat = setInterval(() => send({ type: 'ping' }), 15000)
 
       const cleanup = () => {
-        if (isClosed) return
-        isClosed = true
-        clearInterval(heartbeatInterval)
-        console.log(`[SSE] Cleaning up connection for user: ${userId}`)
-        try {
-          if (changeStream) {
-            changeStream.close()
+        if (closed) return
+        closed = true
+        clearInterval(heartbeat)
+        try { controller.close() } catch {}
+      }
+
+      let pollTimer: ReturnType<typeof setInterval> | null = null
+
+      const startPolling = () => {
+        const knownIds = new Set<string>()
+        let busy = false
+
+        const poll = async () => {
+          if (closed || busy) return
+          busy = true
+          try {
+            const result = await payload.find({
+              collection: 'tasks',
+              where: { assignedTo: { equals: user.id } },
+              depth: 2,
+              limit: 100,
+              sort: '-updatedAt',
+            })
+
+            const docs = result.docs as any[] || []
+            const incoming = new Set(docs.map((t: any) => t.id))
+
+            if (knownIds.size > 0) {
+              for (const task of docs) {
+                if (!knownIds.has(task.id)) {
+                  knownIds.add(task.id)
+                  send({ type: 'task:updated', task })
+                }
+              }
+              for (const id of knownIds) {
+                if (!incoming.has(id)) {
+                  knownIds.delete(id)
+                  send({ type: 'task:deleted', id })
+                }
+              }
+            } else {
+              docs.forEach((t: any) => knownIds.add(t.id))
+            }
+          } catch {} finally {
+            busy = false
           }
-        } catch (err) {
-          console.error('[SSE] Error closing change stream:', err)
         }
-        try {
-          controller.close()
-        } catch {}
+
+        poll()
+        pollTimer = setInterval(poll, 3000)
       }
 
       try {
         const connection = (payload.db as any).connection
         const collection = connection.collection('tasks')
-
-        // Watch the whole collection to catch deletes, updates, and inserts without ObjectId casting issues
-        changeStream = collection.watch([], { fullDocument: 'updateLookup' })
-        console.log(`[SSE] Started watching MongoDB tasks collection for user: ${userId}`)
+        const changeStream = collection.watch([], { fullDocument: 'updateLookup' })
 
         changeStream.on('change', async (change: any) => {
-          if (isClosed) return
-
-          console.log(`[SSE] MongoDB Event detected: ${change.operationType} for ID: ${change.documentKey._id}`)
-
+          if (closed) return
           try {
-            const id =
-              typeof change.documentKey._id === 'object'
-                ? change.documentKey._id.toString()
-                : change.documentKey._id
+            const id = change.documentKey._id.toString()
 
             if (change.operationType === 'delete') {
-              console.log(`[SSE] Emitting task:deleted to user ${userId} for Task ID: ${id}`)
-              safeEnqueue(`data: ${JSON.stringify({ type: 'task:deleted', id })}\n\n`)
+              send({ type: 'task:deleted', id })
               return
             }
 
-            // Fetch the inserted/updated task
             const task = await payload.findByID({
               collection: 'tasks',
               id,
               depth: 2,
+              overrideAccess: true,
+              user,
             })
+            if (!task) return
 
-            if (task) {
-              const assignedId = typeof task.assignedTo === 'object' ? (task.assignedTo as any)?.id : task.assignedTo
-              const isAssigned = assignedId === userId
+            const assignedId =
+              typeof task.assignedTo === 'object'
+                ? (task.assignedTo as any)?.id
+                : task.assignedTo
 
-              if (isAssigned) {
-                const eventType = change.operationType === 'insert' ? 'task:created' : 'task:updated'
-                console.log(`[SSE] Emitting ${eventType} to user ${userId} for Task ID: ${id}`)
-                safeEnqueue(`data: ${JSON.stringify({ type: eventType, task })}\n\n`)
-              } else {
-                console.log(`[SSE] Task ${id} not assigned to ${userId} (assigned to: ${assignedId}). Event skipped.`)
-              }
-            }
-          } catch (err) {
-            console.error('[SSE] Event dispatch error:', err)
-          }
+            if (assignedId !== user.id) return
+
+            send({ type: 'task:updated', task })
+          } catch {}
         })
 
-        changeStream.on('error', (err: any) => {
-          console.error('[SSE] MongoDB change stream error:', err)
-          cleanup()
+        changeStream.on('error', () => {
+          if (!closed) startPolling()
         })
 
         request.signal.addEventListener('abort', () => {
+          try { changeStream.close() } catch {}
           cleanup()
         })
-      } catch (err) {
-        console.error('[SSE] Failed to setup MongoDB change stream:', err)
-        cleanup()
+      } catch {
+        startPolling()
       }
+
+      request.signal.addEventListener('abort', cleanup)
     },
   })
 
