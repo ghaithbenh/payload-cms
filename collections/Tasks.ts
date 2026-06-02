@@ -70,6 +70,7 @@ export const Tasks: CollectionConfig = {
             options: [
                 { label: "Pending", value: "pending" },
                 { label: "In Progress", value: "in-progress" },
+                { label: "Review", value: "review" },
                 { label: "Completed", value: "completed" },
             ],
             required: true,
@@ -99,6 +100,34 @@ export const Tasks: CollectionConfig = {
             relationTo: "videos",
         },
         {
+            name: "statusHistory",
+            type: "array",
+            admin: {
+                readOnly: true,
+            },
+            fields: [
+                {
+                    name: "from",
+                    type: "text",
+                },
+                {
+                    name: "to",
+                    type: "text",
+                    required: true,
+                },
+                {
+                    name: "changedBy",
+                    type: "relationship",
+                    relationTo: "users",
+                },
+                {
+                    name: "changedAt",
+                    type: "date",
+                    required: true,
+                },
+            ],
+        },
+        {
             name: "openApp",
             type: "ui",
             admin: {
@@ -119,4 +148,47 @@ export const Tasks: CollectionConfig = {
             },
         },
     ],
+
+    hooks: {
+        beforeChange: [
+            ({ data, originalDoc, req }) => {
+                if (!data.status || data.status === originalDoc?.status) return;
+
+                const user = req.user;
+                if (!user) throw new Error('Not authenticated');
+
+                const assignedId =
+                    typeof originalDoc.assignedTo === 'object'
+                        ? (originalDoc.assignedTo as any)?.id
+                        : originalDoc.assignedTo;
+
+                if (user.role !== 'admin' && user.id !== assignedId) {
+                    throw new Error('Only the assigned user can change task status');
+                }
+
+                const validTransitions: Record<string, string> = {
+                    'pending': 'in-progress',
+                    'in-progress': 'review',
+                    'review': 'completed',
+                };
+
+                if (validTransitions[originalDoc.status] !== data.status) {
+                    throw new Error(
+                        `Cannot transition from "${originalDoc.status}" to "${data.status}". ` +
+                        `Allowed: ${originalDoc.status} → ${validTransitions[originalDoc.status]}`
+                    );
+                }
+
+                const history = [...(originalDoc.statusHistory || [])];
+                history.push({
+                    from: originalDoc.status,
+                    to: data.status,
+                    changedBy: user.id,
+                    changedAt: new Date().toISOString(),
+                });
+
+                data.statusHistory = history;
+            },
+        ],
+    },
 };

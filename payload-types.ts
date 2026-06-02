@@ -389,12 +389,21 @@ export interface Task {
   id: string;
   title: string;
   description: string;
-  status: 'pending' | 'in-progress' | 'completed';
+  status: 'pending' | 'in-progress' | 'review' | 'completed';
   assignedTo?: (string | null) | User;
   dueDate?: string | null;
   taskPic?: (string | null) | Media;
   taskDoc?: (string | null) | Document;
   taskVideo?: (string | null) | Video;
+  statusHistory?:
+    | {
+        from?: string | null;
+        to: string;
+        changedBy?: (string | null) | User;
+        changedAt: string;
+        id?: string | null;
+      }[]
+    | null;
   subscribed?: string | null;
   folder?: (string | null) | FolderInterface;
   updatedAt: string;
@@ -761,6 +770,15 @@ export interface TasksSelect<T extends boolean = true> {
   taskPic?: T;
   taskDoc?: T;
   taskVideo?: T;
+  statusHistory?:
+    | T
+    | {
+        from?: T;
+        to?: T;
+        changedBy?: T;
+        changedAt?: T;
+        id?: T;
+      };
   subscribed?: T;
   folder?: T;
   updatedAt?: T;
