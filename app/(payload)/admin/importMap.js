@@ -25,6 +25,9 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { CustomCell as CustomCell_681929361b75a1334fa9ff07c63e0cf6 } from '../../../components/CustomCell'
 import { SubscribeField as SubscribeField_b674f93a8336210c102214903c48d0e7 } from '../../../components/SubscribeField'
 import { default as default_17df66fdb2c4cf7d3682157455ab1197 } from '@/components/admin/OpenAppCell'
+import { FolderTableCell as FolderTableCell_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
+import { FolderField as FolderField_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
+import { FolderTypeField as FolderTypeField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -56,5 +59,8 @@ export const importMap = {
   "/components/CustomCell#CustomCell": CustomCell_681929361b75a1334fa9ff07c63e0cf6,
   "/components/SubscribeField#SubscribeField": SubscribeField_b674f93a8336210c102214903c48d0e7,
   "@/components/admin/OpenAppCell#default": default_17df66fdb2c4cf7d3682157455ab1197,
+  "@payloadcms/next/rsc#FolderTableCell": FolderTableCell_f9c02e79a4aed9a3924487c0cd4cafb1,
+  "@payloadcms/next/rsc#FolderField": FolderField_f9c02e79a4aed9a3924487c0cd4cafb1,
+  "@payloadcms/next/client#FolderTypeField": FolderTypeField_2b8867833a34864a02ddf429b0728a40,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

@@ -2,6 +2,7 @@ import type { CollectionConfig } from "payload";
 
 export const Tasks: CollectionConfig = {
     slug: "tasks",
+    folders: true,
 
     admin: {
         useAsTitle: "title",

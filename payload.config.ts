@@ -27,6 +27,12 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
+  folders: {
+    browseByFolder: true, // optional but useful
+    debug: false,
+    slug: 'payload-folders', // default
+    fieldName: 'folder', // default
+  },
   collections: [Users, Media, Pages, Products, ContactSubmissions,
     Subscriptions, Categories, Team, Documents, Videos, Tasks,],
   editor: lexicalEditor(),
