@@ -35,6 +35,9 @@ yarn-error.log*
 *.md
 .claude/
 .vscode/
+.scratch/
+.media/
+
 
 # vercel
 .vercel
