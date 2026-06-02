@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Payload CMS + Next.js App
+
+A [Payload CMS](https://payloadcms.com) backend with a Next.js frontend.
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment
 
-## Learn More
+| Variable | Description |
+|---|---|
+| `PAYLOAD_SECRET` | Payload CMS secret |
+| `DATABASE_URL` | MongoDB connection string |
+| 
 
-To learn more about Next.js, take a look at the following resources:
+## Collections
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Users** — Admin users (auth)
+- **Tasks** — Task management with pic, doc, video uploads; access restricted to assigned user
+- **ContactSubmissions** — Contact form entries; admin-only read
+- **Subscriptions** — Subscription plans; admin-only read
+- **Media** — Image uploads
+- **Documents** — PDF uploads
+- **Videos** — Video uploads
+- **Pages** — CMS pages
+- **Products** — Product catalog
+- **Categories** — Product categories
+- **Team** — Team members
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Frontend Routes
 
-## Deploy on Vercel
+| Path | Description |
+|---|---|
+| `/tasks` | Task list |
+| `/tasks/[id]` | Task detail with image, PDF, video viewer |
+| `/admin` | Payload admin panel |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev          # Start dev server
+npm run build        # Production build
+npx payload generate:types      # Regenerate TS types
+npx payload generate:importmap  # Regenerate admin import map
+```

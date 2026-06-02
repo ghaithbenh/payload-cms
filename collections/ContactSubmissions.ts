@@ -4,7 +4,10 @@ export const ContactSubmissions: CollectionConfig = {
     slug: 'contact-submissions',
     trash: true,
     access: {
-        read: () => true,
+        read: ({ req }) => {
+            if (!req.user) return false;
+            return true;
+        },
     },
     admin: {
         useAsTitle: "name",

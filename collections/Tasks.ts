@@ -9,6 +9,12 @@ export const Tasks: CollectionConfig = {
     },
 
     access: {
+        create: ({ req }) => {
+            const user = req.user;
+            if (!user) return false;
+            return true;
+        },
+
         read: ({ req }) => {
             const user = req.user;
             if (!user) return false;

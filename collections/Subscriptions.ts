@@ -4,7 +4,10 @@ export const Subscriptions: CollectionConfig = {
     slug: 'subscriptions',
     trash: true,
     access: {
-        read: () => true,
+        read: ({ req }) => {
+            if (!req.user) return false;
+            return true;
+        },
     },
     admin: {
         useAsTitle: "name",
