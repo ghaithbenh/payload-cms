@@ -3,9 +3,11 @@ import type { CollectionConfig } from 'payload'
 export const Media: CollectionConfig = {
   slug: 'media',
   trash: true,
+
   access: {
-    read: () => true,// Allows public read access to uploaded files
+    read: () => true,
   },
+
   fields: [
     {
       name: 'alt',
@@ -13,5 +15,8 @@ export const Media: CollectionConfig = {
       required: true,
     },
   ],
-  upload: true,
+
+  upload: {
+    mimeTypes: ['image/*'],
+  },
 }
