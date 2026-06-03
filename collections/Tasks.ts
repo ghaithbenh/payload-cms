@@ -23,24 +23,24 @@ export const Tasks: CollectionConfig = {
             const user = req.user;
             if (!user) return false;
             if (user.role === 'admin') return true;
-            if (user.role === 'manager') return { team: { equals: user.id } };
-            return { assignedTo: { equals: user.id } };
+            if (user.role === 'manager') return { team: { equals: user.id } } as any;
+            return { assignedTo: { equals: user.id } } as any;
         },
 
         update: ({ req }) => {
             const user = req.user;
             if (!user) return false;
             if (user.role === 'admin') return true;
-            if (user.role === 'manager') return { team: { equals: user.id } };
-            return { assignedTo: { equals: user.id } };
+            if (user.role === 'manager') return { team: { equals: user.id } } as any;
+            return { assignedTo: { equals: user.id } } as any;
         },
 
         delete: ({ req }) => {
             const user = req.user;
             if (!user) return false;
             if (user.role === 'admin') return true;
-            if (user.role === 'manager') return { team: { equals: user.id } };
-            return { assignedTo: { equals: user.id } };
+            if (user.role === 'manager') return { team: { equals: user.id } } as any;
+            return { assignedTo: { equals: user.id } } as any;
         },
     },
 

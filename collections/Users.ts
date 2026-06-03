@@ -13,7 +13,19 @@ export const Users: CollectionConfig = {
       const user = req.user
       if (!user) return false
       if ((user.role as string) !== 'user') return true
-      return { id: { equals: user.id } }
+
+      const managerId =
+        user.manager && typeof user.manager === 'object'
+          ? (user.manager as any).id
+          : user.manager
+
+      if (managerId) {
+        return {
+          or: [{ id: { equals: user.id } }, { id: { equals: managerId } }],
+        } as any
+      }
+
+      return { id: { equals: user.id } } as any
     },
     update: ({ req }) => (req.user?.role as string) === 'admin',
     delete: ({ req }) => (req.user?.role as string) === 'admin',
@@ -47,6 +59,9 @@ export const Users: CollectionConfig = {
       type: 'relationship',
       relationTo: 'users',
       hasMany: false,
+      admin: {
+        condition: (data) => data?.role !== 'manager' && data?.role !== 'admin',
+      },
     },
-  ]
+  ],
 }
