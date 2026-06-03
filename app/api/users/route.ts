@@ -93,3 +93,72 @@ export async function GET(request: Request) {
 
   return Response.json(data)
 }
+
+// Re-export non-GET methods to Payload's default REST handler
+import { REST_POST, REST_DELETE, REST_PATCH, REST_PUT, REST_OPTIONS } from '@payloadcms/next/routes'
+import payloadConfig from '@payload-config'
+
+const payloadPOST = REST_POST(payloadConfig)
+const payloadDELETE = REST_DELETE(payloadConfig)
+const payloadPATCH = REST_PATCH(payloadConfig)
+const payloadPUT = REST_PUT(payloadConfig)
+const payloadOPTIONS = REST_OPTIONS(payloadConfig)
+
+export async function POST(
+  request: Request,
+  context: { params: Promise<{ slug?: string[] }> }
+) {
+  const resolvedParams = await context.params
+  const newParams = Promise.resolve({
+    ...resolvedParams,
+    slug: ['users'],
+  })
+  return payloadPOST(request, { ...context, params: newParams })
+}
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ slug?: string[] }> }
+) {
+  const resolvedParams = await context.params
+  const newParams = Promise.resolve({
+    ...resolvedParams,
+    slug: ['users'],
+  })
+  return payloadDELETE(request, { ...context, params: newParams })
+}
+export async function PATCH(
+  request: Request,
+  context: { params: Promise<{ slug?: string[] }> }
+) {
+  const resolvedParams = await context.params
+  const newParams = Promise.resolve({
+    ...resolvedParams,
+    slug: ['users'],
+  })
+  return payloadPATCH(request, { ...context, params: newParams })
+}
+export async function PUT(
+  request: Request,
+  context: { params: Promise<{ slug?: string[] }> }
+) {
+  const resolvedParams = await context.params
+  const newParams = Promise.resolve({
+    ...resolvedParams,
+    slug: ['users'],
+  })
+  return payloadPUT(request, { ...context, params: newParams })
+}
+export async function OPTIONS(
+  request: Request,
+  context: { params: Promise<{ slug?: string[] }> }
+) {
+  const resolvedParams = await context.params
+  const newParams = Promise.resolve({
+    ...resolvedParams,
+    slug: ['users'],
+  })
+  return payloadOPTIONS(request, { ...context, params: newParams })
+}
+
+
+
