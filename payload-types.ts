@@ -149,7 +149,8 @@ export interface User {
   id: string;
   firstName?: string | null;
   lastName?: string | null;
-  role: 'admin' | 'user';
+  role: 'admin' | 'manager' | 'user';
+  manager?: (string | null) | User;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -391,6 +392,7 @@ export interface Task {
   description: string;
   status: 'pending' | 'in-progress' | 'review' | 'completed';
   assignedTo?: (string | null) | User;
+  team?: (string | null) | User;
   dueDate?: string | null;
   taskPic?: (string | null) | Media;
   taskDoc?: (string | null) | Document;
@@ -557,6 +559,7 @@ export interface UsersSelect<T extends boolean = true> {
   firstName?: T;
   lastName?: T;
   role?: T;
+  manager?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -766,6 +769,7 @@ export interface TasksSelect<T extends boolean = true> {
   description?: T;
   status?: T;
   assignedTo?: T;
+  team?: T;
   dueDate?: T;
   taskPic?: T;
   taskDoc?: T;

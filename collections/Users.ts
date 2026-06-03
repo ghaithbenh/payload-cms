@@ -34,12 +34,19 @@ export const Users: CollectionConfig = {
       required: true,
       options: [
         { label: 'Admin', value: 'admin' },
+        { label: 'Manager', value: 'manager' },
         { label: 'User', value: 'user' },
       ],
       access: {
-        create: ({ req }) => req.user?.role === 'admin',
-        update: ({ req }) => req.user?.role === 'admin',
+        create: ({ req }) => (req.user?.role as string) === 'admin',
+        update: ({ req }) => (req.user?.role as string) === 'admin',
       },
+    },
+    {
+      name: 'manager',
+      type: 'relationship',
+      relationTo: 'users',
+      hasMany: false,
     },
   ]
 }

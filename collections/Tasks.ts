@@ -22,21 +22,24 @@ export const Tasks: CollectionConfig = {
         read: ({ req }) => {
             const user = req.user;
             if (!user) return false;
-            if ((user.role as string) !== 'user') return true;
+            if (user.role === 'admin') return true;
+            if (user.role === 'manager') return { team: { equals: user.id } };
             return { assignedTo: { equals: user.id } };
         },
 
         update: ({ req }) => {
             const user = req.user;
             if (!user) return false;
-            if ((user.role as string) !== 'user') return true;
+            if (user.role === 'admin') return true;
+            if (user.role === 'manager') return { team: { equals: user.id } };
             return { assignedTo: { equals: user.id } };
         },
 
         delete: ({ req }) => {
             const user = req.user;
             if (!user) return false;
-            if ((user.role as string) !== 'user') return true;
+            if (user.role === 'admin') return true;
+            if (user.role === 'manager') return { team: { equals: user.id } };
             return { assignedTo: { equals: user.id } };
         },
     },
@@ -71,6 +74,15 @@ export const Tasks: CollectionConfig = {
             type: "relationship",
             relationTo: "users",
             access: { update: adminOrManager },
+        },
+        {
+            name: "team",
+            type: "relationship",
+            relationTo: "users",
+            admin: {
+                hidden: true,
+            },
+            access: { create: adminOrManager, update: adminOrManager },
         },
         {
             name: "dueDate",
@@ -149,8 +161,31 @@ export const Tasks: CollectionConfig = {
 
     hooks: {
         beforeChange: [
-            ({ data, originalDoc, req }) => {
-                if (!data.status || data.status === originalDoc?.status) return;
+            async ({ data, originalDoc, req }) => {
+                const newAssignedId =
+                    typeof data.assignedTo === 'object'
+                        ? (data.assignedTo as any)?.id
+                        : data.assignedTo;
+
+                const oldAssignedId =
+                    typeof originalDoc?.assignedTo === 'object'
+                        ? (originalDoc?.assignedTo as any)?.id
+                        : originalDoc?.assignedTo;
+
+                if (newAssignedId && newAssignedId !== oldAssignedId) {
+                    try {
+                        const assignedUser = await req.payload.findByID({
+                            collection: 'users',
+                            id: newAssignedId,
+                            depth: 0,
+                        });
+                        data.team = (assignedUser as any)?.manager || null;
+                    } catch {
+                        // leave team unchanged if lookup fails
+                    }
+                }
+
+                if (!originalDoc || !data.status || data.status === originalDoc?.status) return;
 
                 const user = req.user;
                 if (!user) throw new Error('Not authenticated');
@@ -162,7 +197,7 @@ export const Tasks: CollectionConfig = {
                         ? (originalDoc?.assignedTo as any)?.id
                         : originalDoc?.assignedTo;
 
-                if ((user.role as string) !== 'admin' && user.id !== assignedId) {
+                if ((user.role as string) !== 'admin' && (user.role as string) !== 'manager' && user.id !== assignedId) {
                     throw new Error('Only the assigned user can change task status');
                 }
 
