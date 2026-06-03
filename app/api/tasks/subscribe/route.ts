@@ -16,7 +16,9 @@ export async function GET(request: Request) {
         if (closed) return
         try {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
-        } catch {}
+        } catch (err) {
+          console.error('Stream enqueue error:', err)
+        }
       }
 
       if (!user) {
@@ -33,7 +35,7 @@ export async function GET(request: Request) {
         if (closed) return
         closed = true
         clearInterval(heartbeat)
-        try { controller.close() } catch {}
+        try { controller.close() } catch { }
       }
 
       let pollTimer: ReturnType<typeof setInterval> | null = null
@@ -73,7 +75,9 @@ export async function GET(request: Request) {
             } else {
               docs.forEach((t: any) => knownIds.add(t.id))
             }
-          } catch {} finally {
+          } catch (err) {
+            console.error('Poll error:', err)
+          } finally {
             busy = false
           }
         }
@@ -114,7 +118,9 @@ export async function GET(request: Request) {
             if (assignedId !== user.id) return
 
             send({ type: 'task:updated', task })
-          } catch {}
+          } catch (err) {
+            console.error('Change stream error:', err)
+          }
         })
 
         changeStream.on('error', () => {
@@ -122,8 +128,9 @@ export async function GET(request: Request) {
         })
 
         request.signal.addEventListener('abort', () => {
-          try { changeStream.close() } catch {}
-          cleanup()
+          try { changeStream.close() } catch (err) {
+            console.error('Close error:', err)
+          }
         })
       } catch {
         startPolling()

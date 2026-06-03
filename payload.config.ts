@@ -44,7 +44,9 @@ export default buildConfig({
     outputFile: path.resolve(dirname, "payload-types.ts"),
   },
   db: mongooseAdapter({
-    url: process.env.DATABASE_URL || false,
+    url: process.env.DATABASE_URL || (() => {
+      throw new Error('DATABASE_URL is required');
+    })(),
   }),
   sharp,
   plugins: [],
