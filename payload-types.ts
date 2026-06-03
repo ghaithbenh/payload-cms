@@ -206,9 +206,15 @@ export interface Page {
         title: string;
         subtitle?: string | null;
         backgroundImage?: (string | null) | Media;
-        cta?: {
-          label?: string | null;
+        link: {
+          type?: ('internal' | 'custom') | null;
+          label: string;
+          reference?: {
+            relationTo: 'pages';
+            value: string | Page;
+          } | null;
           url?: string | null;
+          newTab?: boolean | null;
         };
         id?: string | null;
         blockName?: string | null;
@@ -237,8 +243,16 @@ export interface Page {
     | {
         title: string;
         description?: string | null;
-        buttonLabel: string;
-        buttonUrl: string;
+        link: {
+          type?: ('internal' | 'custom') | null;
+          label: string;
+          reference?: {
+            relationTo: 'pages';
+            value: string | Page;
+          } | null;
+          url?: string | null;
+          newTab?: boolean | null;
+        };
         variant?: ('primary' | 'secondary') | null;
         id?: string | null;
         blockName?: string | null;
@@ -632,11 +646,14 @@ export interface PagesSelect<T extends boolean = true> {
               title?: T;
               subtitle?: T;
               backgroundImage?: T;
-              cta?:
+              link?:
                 | T
                 | {
+                    type?: T;
                     label?: T;
+                    reference?: T;
                     url?: T;
+                    newTab?: T;
                   };
               id?: T;
               blockName?: T;
@@ -653,8 +670,15 @@ export interface PagesSelect<T extends boolean = true> {
           | {
               title?: T;
               description?: T;
-              buttonLabel?: T;
-              buttonUrl?: T;
+              link?:
+                | T
+                | {
+                    type?: T;
+                    label?: T;
+                    reference?: T;
+                    url?: T;
+                    newTab?: T;
+                  };
               variant?: T;
               id?: T;
               blockName?: T;

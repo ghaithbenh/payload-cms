@@ -12,12 +12,7 @@ export const Pages: CollectionConfig = {
     useAsTitle: 'title',
   },
   access: {
-    read: ({ req }) => {
-      if (req.user?.role === "admin") return true;
-      return {
-        status: { equals: "published" },
-      };
-    }
+    read: () => true
   },
   fields: [
     {

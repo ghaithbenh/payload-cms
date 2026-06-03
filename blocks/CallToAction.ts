@@ -1,4 +1,5 @@
 import type { Block } from 'payload'
+import { link } from '../fields/link'
 
 export const CallToAction: Block = {
   slug: 'callToAction',
@@ -12,16 +13,7 @@ export const CallToAction: Block = {
       name: 'description',
       type: 'text',
     },
-    {
-      name: 'buttonLabel',
-      type: 'text',
-      required: true,
-    },
-    {
-      name: 'buttonUrl',
-      type: 'text',
-      required: true,
-    },
+    link,
     {
       name: 'variant',
       type: 'select',
@@ -33,3 +25,4 @@ export const CallToAction: Block = {
     },
   ],
 }
+

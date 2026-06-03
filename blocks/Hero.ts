@@ -1,4 +1,5 @@
 import type { Block } from 'payload'
+import { link } from '../fields/link'
 
 export const Hero: Block = {
   slug: 'hero',
@@ -17,19 +18,7 @@ export const Hero: Block = {
       type: 'upload',
       relationTo: 'media',
     },
-    {
-      name: 'cta',
-      type: 'group',
-      fields: [
-        {
-          name: 'label',
-          type: 'text',
-        },
-        {
-          name: 'url',
-          type: 'text',
-        },
-      ],
-    },
+    link,
   ],
 }
+

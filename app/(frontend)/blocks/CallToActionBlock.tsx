@@ -1,5 +1,13 @@
 export function CallToActionBlock({ block }: { block: any }) {
   const isPrimary = (block.variant || 'primary') === 'primary'
+  const link = block.link
+  let href = ''
+  if (link?.type === 'internal' && link.reference) {
+    const reference = link.reference
+    href = typeof reference === 'object' ? `/${reference.slug}` : `/${reference}`
+  } else if (link?.type === 'custom') {
+    href = link.url || ''
+  }
 
   return (
     <section className="px-8 py-24">
@@ -15,20 +23,25 @@ export function CallToActionBlock({ block }: { block: any }) {
             {block.description}
           </p>
         )}
-        <a
-          href={block.buttonUrl}
-          className={`inline-flex items-center gap-2 font-mono text-[0.75rem] font-semibold uppercase tracking-[0.14em] px-6 py-4 transition-all duration-300 no-underline hover:-translate-y-0.5 ${
-            isPrimary
-              ? 'bg-light text-ink hover:bg-accent hover:text-light'
-              : 'bg-transparent text-light border-2 border-dim hover:border-light'
-          }`}
-        >
-          {block.buttonLabel}
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300">
-            <path d="M3 8h10M9 4l4 4-4 4" />
-          </svg>
-        </a>
+        {link?.label && href && (
+          <a
+            href={href}
+            target={link.newTab ? '_blank' : undefined}
+            rel={link.newTab ? 'noopener noreferrer' : undefined}
+            className={`inline-flex items-center gap-2 font-mono text-[0.75rem] font-semibold uppercase tracking-[0.14em] px-6 py-4 transition-all duration-300 no-underline hover:-translate-y-0.5 ${
+              isPrimary
+                ? 'bg-light text-ink hover:bg-accent hover:text-light'
+                : 'bg-transparent text-light border-2 border-dim hover:border-light'
+            }`}
+          >
+            {link.label}
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300">
+              <path d="M3 8h10M9 4l4 4-4 4" />
+            </svg>
+          </a>
+        )}
       </div>
     </section>
   )
 }
+
