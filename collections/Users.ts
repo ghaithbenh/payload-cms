@@ -8,15 +8,15 @@ export const Users: CollectionConfig = {
   },
   auth: true,
   access: {
-    create: ({ req }) => req.user?.role === 'admin',
+    create: ({ req }) => (req.user?.role as string) === 'admin',
     read: ({ req }) => {
       const user = req.user
       if (!user) return false
-      if (user.role === 'admin') return true
+      if ((user.role as string) !== 'user') return true
       return { id: { equals: user.id } }
     },
-    update: ({ req }) => req.user?.role === 'admin',
-    delete: ({ req }) => req.user?.role === 'admin',
+    update: ({ req }) => (req.user?.role as string) === 'admin',
+    delete: ({ req }) => (req.user?.role as string) === 'admin',
   },
   fields: [
     {

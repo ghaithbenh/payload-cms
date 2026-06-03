@@ -1,5 +1,8 @@
 import type { CollectionConfig } from "payload";
 
+const adminOrManager = ({ req }: { req: any }) =>
+    (req.user?.role as string) !== 'user';
+
 export const Tasks: CollectionConfig = {
     slug: "tasks",
     folders: true,
@@ -19,37 +22,22 @@ export const Tasks: CollectionConfig = {
         read: ({ req }) => {
             const user = req.user;
             if (!user) return false;
-            if (user.role === 'admin') return true;
-
-            return {
-                assignedTo: {
-                    equals: user.id,
-                },
-            };
+            if ((user.role as string) !== 'user') return true;
+            return { assignedTo: { equals: user.id } };
         },
 
         update: ({ req }) => {
             const user = req.user;
             if (!user) return false;
-            if (user.role === 'admin') return true;
-
-            return {
-                assignedTo: {
-                    equals: user.id,
-                },
-            };
+            if ((user.role as string) !== 'user') return true;
+            return { assignedTo: { equals: user.id } };
         },
 
         delete: ({ req }) => {
             const user = req.user;
             if (!user) return false;
-            if (user.role === 'admin') return true;
-
-            return {
-                assignedTo: {
-                    equals: user.id,
-                },
-            };
+            if ((user.role as string) !== 'user') return true;
+            return { assignedTo: { equals: user.id } };
         },
     },
 
@@ -58,15 +46,18 @@ export const Tasks: CollectionConfig = {
             name: "title",
             type: "text",
             required: true,
+            access: { update: adminOrManager },
         },
         {
             name: "description",
             type: "text",
             required: true,
+            access: { update: adminOrManager },
         },
         {
             name: "status",
             type: "select",
+            defaultValue: "pending",
             options: [
                 { label: "Pending", value: "pending" },
                 { label: "In Progress", value: "in-progress" },
@@ -79,25 +70,30 @@ export const Tasks: CollectionConfig = {
             name: "assignedTo",
             type: "relationship",
             relationTo: "users",
+            access: { update: adminOrManager },
         },
         {
             name: "dueDate",
             type: "date",
+            access: { update: adminOrManager },
         },
         {
             name: "taskPic",
             type: "upload",
             relationTo: "media",
+            access: { update: adminOrManager },
         },
         {
             name: "taskDoc",
             type: "upload",
             relationTo: "documents",
+            access: { update: adminOrManager },
         },
         {
             name: "taskVideo",
             type: "upload",
             relationTo: "videos",
+            access: { update: adminOrManager },
         },
         {
             name: "statusHistory",
@@ -105,6 +101,7 @@ export const Tasks: CollectionConfig = {
             admin: {
                 readOnly: true,
             },
+            access: { update: adminOrManager },
             fields: [
                 {
                     name: "from",
@@ -146,6 +143,7 @@ export const Tasks: CollectionConfig = {
                 },
                 position: "sidebar",
             },
+            access: { update: adminOrManager },
         },
     ],
 
@@ -157,12 +155,14 @@ export const Tasks: CollectionConfig = {
                 const user = req.user;
                 if (!user) throw new Error('Not authenticated');
 
-                const assignedId =
-                    typeof originalDoc.assignedTo === 'object'
-                        ? (originalDoc.assignedTo as any)?.id
-                        : originalDoc.assignedTo;
+                const prevStatus = originalDoc?.status || 'pending';
 
-                if (user.role !== 'admin' && user.id !== assignedId) {
+                const assignedId =
+                    typeof originalDoc?.assignedTo === 'object'
+                        ? (originalDoc?.assignedTo as any)?.id
+                        : originalDoc?.assignedTo;
+
+                if ((user.role as string) !== 'admin' && user.id !== assignedId) {
                     throw new Error('Only the assigned user can change task status');
                 }
 
@@ -172,16 +172,16 @@ export const Tasks: CollectionConfig = {
                     'review': 'completed',
                 };
 
-                if (validTransitions[originalDoc.status] !== data.status) {
+                if (validTransitions[prevStatus] !== data.status) {
                     throw new Error(
-                        `Cannot transition from "${originalDoc.status}" to "${data.status}". ` +
-                        `Allowed: ${originalDoc.status} → ${validTransitions[originalDoc.status]}`
+                        `Cannot transition from "${prevStatus}" to "${data.status}". ` +
+                        `Allowed: ${prevStatus} → ${validTransitions[prevStatus]}`
                     );
                 }
 
-                const history = [...(originalDoc.statusHistory || [])];
+                const history = [...(originalDoc?.statusHistory || [])];
                 history.push({
-                    from: originalDoc.status,
+                    from: prevStatus,
                     to: data.status,
                     changedBy: user.id,
                     changedAt: new Date().toISOString(),
