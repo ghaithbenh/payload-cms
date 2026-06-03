@@ -1,5 +1,6 @@
 import type { CollectionConfig, Where } from 'payload'
 import type { User } from '@/payload-types'
+import { invalidateCollection } from '@/lib/cache'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -67,4 +68,17 @@ export const Users: CollectionConfig = {
       },
     },
   ],
+
+  hooks: {
+    afterChange: [
+      async ({ doc }) => {
+        await invalidateCollection('users', doc.id);
+      },
+    ],
+    afterDelete: [
+      async ({ doc }) => {
+        await invalidateCollection('users', doc.id);
+      },
+    ],
+  },
 }

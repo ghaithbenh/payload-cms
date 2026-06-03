@@ -1,5 +1,6 @@
 import type { CollectionConfig, Where, PayloadRequest } from "payload";
 import type { User } from "@/payload-types";
+import { invalidateCollection } from "@/lib/cache";
 
 const adminOrManager = ({ req }: { req: PayloadRequest }) => {
     const user = req.user as User | null;
@@ -288,6 +289,8 @@ export const Tasks: CollectionConfig = {
                         ? doc.assignedTo.id
                         : doc.assignedTo;
 
+                await invalidateCollection('tasks', doc.id);
+
                 if (assignedToId) {
                     try {
                         const action = operation === 'create' ? 'created' : 'updated';
@@ -303,6 +306,11 @@ export const Tasks: CollectionConfig = {
                         req.payload.logger?.error?.({ err }, 'Failed to create notification');
                     }
                 }
+            },
+        ],
+        afterDelete: [
+            async ({ doc }) => {
+                await invalidateCollection('tasks', doc.id);
             },
         ],
     },

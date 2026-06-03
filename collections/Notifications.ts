@@ -1,5 +1,6 @@
 import type { CollectionConfig, Where } from "payload";
 import type { User } from "@/payload-types";
+import { invalidateCollection } from "@/lib/cache";
 
 export const Notifications: CollectionConfig = {
     slug: "notifications",
@@ -64,4 +65,17 @@ export const Notifications: CollectionConfig = {
             defaultValue: false,
         },
     ],
+
+    hooks: {
+        afterChange: [
+            async ({ doc }) => {
+                await invalidateCollection('notifications', doc.id);
+            },
+        ],
+        afterDelete: [
+            async ({ doc }) => {
+                await invalidateCollection('notifications', doc.id);
+            },
+        ],
+    },
 };

@@ -4,6 +4,7 @@ import { getPayload } from 'payload'
 import { fileURLToPath } from 'url'
 
 import config from '@/payload.config'
+import { cacheAside, listKey, CACHE_TTL } from '@/lib/cache'
 import './styles.css'
 
 export default async function HomePage() {
@@ -12,10 +13,11 @@ export default async function HomePage() {
   const payload = await getPayload({ config: payloadConfig })
   const { user } = await payload.auth({ headers })
 
-  const pages = await payload.find({
-    collection: 'pages',
-    limit: 100,
-  })
+  const pages = await cacheAside(
+    listKey('pages', { limit: 100 }),
+    () => payload.find({ collection: 'pages', limit: 100 }),
+    CACHE_TTL.pages,
+  )
 
   const fileURL = `vscode://file/${fileURLToPath(import.meta.url)}`
 
