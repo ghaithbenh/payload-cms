@@ -161,7 +161,40 @@ export const Tasks: CollectionConfig = {
 
     hooks: {
         beforeChange: [
-            async ({ data, originalDoc, req }) => {
+            async ({ data, originalDoc, req, operation }) => {
+                if (operation === 'create' && !data.assignedTo) {
+                    try {
+                        const { docs: users } = await req.payload.find({
+                            collection: 'users',
+                            depth: 0,
+                            pagination: false,
+                        });
+
+                        if (users && users.length > 0) {
+                            const userTaskCounts = await Promise.all(
+                                users.map(async (user) => {
+                                    const { totalDocs } = await req.payload.count({
+                                        collection: 'tasks',
+                                        where: { assignedTo: { equals: user.id } },
+                                    });
+                                    return { id: user.id, count: totalDocs };
+                                })
+                            );
+
+                            const leastBusy = userTaskCounts.reduce((min, curr) =>
+                                curr.count < min.count ? curr : min,
+                            );
+
+                            data.assignedTo = leastBusy.id;
+                            req.payload.logger?.info?.(`Auto-assigned new task to user ${leastBusy.id} with ${leastBusy.count} existing tasks.`);
+                        } else {
+                            req.payload.logger?.warn?.('Auto-assignment skipped: No users found in the database.');
+                        }
+                    } catch (err) {
+                        req.payload.logger?.error?.({ err }, 'Auto-assignment failed in beforeChange');
+                    }
+                }
+
                 const newAssignedId =
                     typeof data.assignedTo === 'object'
                         ? (data.assignedTo as any)?.id
@@ -180,12 +213,18 @@ export const Tasks: CollectionConfig = {
                             depth: 0,
                         });
                         data.team = (assignedUser as any)?.manager || null;
-                    } catch {
-                        // leave team unchanged if lookup fails
+                    } catch (err) {
+                        req.payload.logger?.error?.(
+                            {
+                                newAssignedId,
+                                error: err,
+                            },
+                            'Failed to resolve assigned user for team mapping'
+                        );
                     }
                 }
 
-                if (!originalDoc || !data.status || data.status === originalDoc?.status) return;
+                if (operation === 'create' || !data.status || data.status === originalDoc?.status) return;
 
                 const user = req.user;
                 if (!user) throw new Error('Not authenticated');
