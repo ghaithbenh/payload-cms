@@ -12,19 +12,19 @@ export const Notifications: CollectionConfig = {
 
     access: {
         create: ({ req }) => {
-            return {
-                userId: { equals: req.user?.id },
-            };
+            return Boolean(req.user);
         },
         read: ({ req }) => {
             const user = req.user as User | null;
             if (!user) return false;
+            if (user.role === 'admin') return true;
             const query: Where = { userId: { equals: user.id } };
             return query;
         },
         update: ({ req }) => {
             const user = req.user as User | null;
             if (!user) return false;
+            if (user.role === 'admin') return true;
             const query: Where = { userId: { equals: user.id } };
             return query;
         },
