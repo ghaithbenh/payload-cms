@@ -21,11 +21,12 @@ Well-organized collections, components, blocks
 Proper TypeScript setup
 Documentation - Great! ✅
 
-README is now production-ready
-Clear environment variable docs
-Collection descriptions updated
-Scripts documented
-
+## Features
+- Real-time task updates via SSE
+- Automatic task assignment to least busy user
+- Role-based access control (Admin, Manager, User)
+- Task status transitions with validation
+- Notifications on task changes
 
 
 
