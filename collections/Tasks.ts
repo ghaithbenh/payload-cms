@@ -162,6 +162,7 @@ export const Tasks: CollectionConfig = {
     hooks: {
         beforeChange: [
             async ({ data, originalDoc, req, operation }) => {
+                // Auto-assign to least busy user on create if no one assigned
                 if (operation === 'create' && !data.assignedTo) {
                     try {
                         const { docs: users } = await req.payload.find({
@@ -186,15 +187,18 @@ export const Tasks: CollectionConfig = {
                             );
 
                             data.assignedTo = leastBusy.id;
-                            req.payload.logger?.info?.(`Auto-assigned new task to user ${leastBusy.id} with ${leastBusy.count} existing tasks.`);
+                            req.payload.logger?.info?.(
+                                `Auto-assigned task to user ${leastBusy.id} (${leastBusy.count} existing tasks)`
+                            );
                         } else {
-                            req.payload.logger?.warn?.('Auto-assignment skipped: No users found in the database.');
+                            req.payload.logger?.warn?.('Auto-assignment skipped: no users found');
                         }
                     } catch (err) {
-                        req.payload.logger?.error?.({ err }, 'Auto-assignment failed in beforeChange');
+                        req.payload.logger?.error?.({ err }, 'Auto-assignment failed');
                     }
                 }
 
+                // Team mapping: resolve assigned user's manager
                 const newAssignedId =
                     typeof data.assignedTo === 'object'
                         ? (data.assignedTo as any)?.id
@@ -215,15 +219,13 @@ export const Tasks: CollectionConfig = {
                         data.team = (assignedUser as any)?.manager || null;
                     } catch (err) {
                         req.payload.logger?.error?.(
-                            {
-                                newAssignedId,
-                                error: err,
-                            },
-                            'Failed to resolve assigned user for team mapping'
+                            { newAssignedId, error: err },
+                            'Failed to resolve team mapping'
                         );
                     }
                 }
 
+                // Status transition validation (skip on create)
                 if (operation === 'create' || !data.status || data.status === originalDoc?.status) return;
 
                 const user = req.user;
@@ -262,6 +264,30 @@ export const Tasks: CollectionConfig = {
                 });
 
                 data.statusHistory = history;
+            },
+        ],
+        afterChange: [
+            async ({ doc, operation, req }) => {
+                const assignedToId =
+                    typeof doc.assignedTo === 'object'
+                        ? (doc.assignedTo as any)?.id
+                        : doc.assignedTo;
+
+                if (assignedToId) {
+                    try {
+                        const action = operation === 'create' ? 'created' : 'updated';
+                        await req.payload.create({
+                            collection: 'notifications',
+                            data: {
+                                userId: assignedToId,
+                                message: `Task "${doc.title}" was ${action}`,
+                                type: 'info',
+                            },
+                        });
+                    } catch (err) {
+                        req.payload.logger?.error?.({ err }, 'Failed to create notification');
+                    }
+                }
             },
         ],
     },

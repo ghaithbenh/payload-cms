@@ -78,6 +78,7 @@ export interface Config {
     documents: Document;
     videos: Video;
     tasks: Task;
+    notifications: Notification;
     'payload-kv': PayloadKv;
     'payload-folders': FolderInterface;
     'payload-locked-documents': PayloadLockedDocument;
@@ -101,6 +102,7 @@ export interface Config {
     documents: DocumentsSelect<false> | DocumentsSelect<true>;
     videos: VideosSelect<false> | VideosSelect<true>;
     tasks: TasksSelect<false> | TasksSelect<true>;
+    notifications: NotificationsSelect<false> | NotificationsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-folders': PayloadFoldersSelect<false> | PayloadFoldersSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -439,6 +441,19 @@ export interface FolderInterface {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "notifications".
+ */
+export interface Notification {
+  id: string;
+  userId: string | User;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -504,6 +519,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'tasks';
         value: string | Task;
+      } | null)
+    | ({
+        relationTo: 'notifications';
+        value: string | Notification;
       } | null)
     | ({
         relationTo: 'payload-folders';
@@ -785,6 +804,18 @@ export interface TasksSelect<T extends boolean = true> {
       };
   subscribed?: T;
   folder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "notifications_select".
+ */
+export interface NotificationsSelect<T extends boolean = true> {
+  userId?: T;
+  message?: T;
+  type?: T;
+  read?: T;
   updatedAt?: T;
   createdAt?: T;
 }

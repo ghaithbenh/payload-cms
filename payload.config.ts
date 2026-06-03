@@ -16,6 +16,7 @@ import { Team } from "./collections/Team";
 import { Documents } from "./collections/Documents";
 import { Videos } from "./collections/Videos";
 import { Tasks } from "./collections/Tasks";
+import { Notifications } from "./collections/Notifications";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -34,7 +35,7 @@ export default buildConfig({
     fieldName: 'folder', // default
   },
   collections: [Users, Media, Pages, Products, ContactSubmissions,
-    Subscriptions, Categories, Team, Documents, Videos, Tasks,],
+    Subscriptions, Categories, Team, Documents, Videos, Tasks, Notifications,],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   typescript: {
