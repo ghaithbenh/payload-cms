@@ -37,6 +37,7 @@ yarn-error.log*
 .vscode/
 scratch/
 media/
+documents/
 
 
 # vercel

@@ -7,7 +7,7 @@ export const Categories: CollectionConfig = {
         create: ({ req }) => req.user?.role === 'admin',
         read: () => true,  // Depends on your needs
         update: ({ req }) => req.user?.role === 'admin',
-        delete: ({ req }) => req.user?.role === 'admin',
+        delete: ({ req }) => Boolean(req.user),
     },
     admin: {
         useAsTitle: "name",
