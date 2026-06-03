@@ -1,6 +1,7 @@
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { cacheAside, listKey, CACHE_TTL } from '@/lib/cache'
+import { rateLimit, getClientIp } from '@/lib/rateLimit'
 import type { User } from '@/payload-types'
 import type { Where } from 'payload'
 
@@ -28,6 +29,25 @@ function parseQueryParams(url: string) {
 }
 
 export async function GET(request: Request) {
+  const ip = getClientIp(request)
+  //rate limit 100
+  const rateLimitResult = await rateLimit(`users:${ip}`, 100, 60)
+
+  if (!rateLimitResult.allowed) {
+    return Response.json(
+      { error: 'Too Many Requests' },
+      {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+          'Retry-After': String(rateLimitResult.reset - Math.floor(Date.now() / 1000)),
+        },
+      }
+    )
+  }
+
   const payloadConfig = await config
   const payload = await getPayload({ config: payloadConfig })
   const { user } = await payload.auth({ headers: request.headers })
