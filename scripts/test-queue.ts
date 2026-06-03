@@ -22,7 +22,7 @@ async function main() {
   // 3. Enqueue a test notification
   console.log('[3] Enqueuing test notification...')
   await enqueueNotification({
-    userId: 'test-user-123',
+    userId: '665d9c73b0632a9b37c046a3',
     message: 'Test notification from queue test script',
     type: 'info',
   })
