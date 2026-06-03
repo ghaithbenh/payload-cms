@@ -17,11 +17,15 @@ import { Documents } from "./collections/Documents";
 import { Videos } from "./collections/Videos";
 import { Tasks } from "./collections/Tasks";
 import { Notifications } from "./collections/Notifications";
+import { startNotificationWorker } from "./lib/queue";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
 export default buildConfig({
+  onInit: async (payload) => {
+    await startNotificationWorker(payload);
+  },
   admin: {
     user: Users.slug,
     importMap: {

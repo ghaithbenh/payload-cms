@@ -1,6 +1,7 @@
 import type { CollectionConfig, Where, PayloadRequest } from "payload";
 import type { User } from "@/payload-types";
 import { invalidateCollection } from "@/lib/cache";
+import { enqueueNotification } from "../lib/queue";
 
 const adminOrManager = ({ req }: { req: PayloadRequest }) => {
     const user = req.user as User | null;
@@ -294,13 +295,10 @@ export const Tasks: CollectionConfig = {
                 if (assignedToId) {
                     try {
                         const action = operation === 'create' ? 'created' : 'updated';
-                        await req.payload.create({
-                            collection: 'notifications',
-                            data: {
-                                userId: assignedToId,
-                                message: `Task "${doc.title}" was ${action}`,
-                                type: 'info',
-                            },
+                        await enqueueNotification({
+                            userId: assignedToId,
+                            message: `Task "${doc.title}" was ${action}`,
+                            type: 'info',
                         });
                     } catch (err) {
                         req.payload.logger?.error?.({ err }, 'Failed to create notification');
