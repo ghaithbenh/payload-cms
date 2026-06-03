@@ -4,7 +4,10 @@ export const Categories: CollectionConfig = {
     slug: 'categories',
     trash: true,
     access: {
-        read: () => true,
+        create: ({ req }) => req.user?.role === 'admin',
+        read: () => true,  // Depends on your needs
+        update: ({ req }) => req.user?.role === 'admin',
+        delete: ({ req }) => req.user?.role === 'admin',
     },
     admin: {
         useAsTitle: "name",

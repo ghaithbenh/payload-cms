@@ -4,7 +4,7 @@ export const Team: CollectionConfig = {
     slug: 'team',
     trash: true,
     access: {
-        read: () => true,
+        read: ({ req }) => !!req.user
     },
     admin: {
         useAsTitle: "name",

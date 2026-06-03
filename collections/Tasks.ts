@@ -1,7 +1,10 @@
-import type { CollectionConfig } from "payload";
+import type { CollectionConfig, Where, PayloadRequest } from "payload";
+import type { User } from "@/payload-types";
 
-const adminOrManager = ({ req }: { req: any }) =>
-    (req.user?.role as string) !== 'user';
+const adminOrManager = ({ req }: { req: PayloadRequest }) => {
+    const user = req.user as User | null;
+    return user?.role !== 'user';
+};
 
 export const Tasks: CollectionConfig = {
     slug: "tasks",
@@ -20,27 +23,39 @@ export const Tasks: CollectionConfig = {
         },
 
         read: ({ req }) => {
-            const user = req.user;
+            const user = req.user as User | null;
             if (!user) return false;
             if (user.role === 'admin') return true;
-            if (user.role === 'manager') return { team: { equals: user.id } } as any;
-            return { assignedTo: { equals: user.id } } as any;
+            if (user.role === 'manager') {
+                const query: Where = { team: { equals: user.id } };
+                return query;
+            }
+            const query: Where = { assignedTo: { equals: user.id } };
+            return query;
         },
 
         update: ({ req }) => {
-            const user = req.user;
+            const user = req.user as User | null;
             if (!user) return false;
             if (user.role === 'admin') return true;
-            if (user.role === 'manager') return { team: { equals: user.id } } as any;
-            return { assignedTo: { equals: user.id } } as any;
+            if (user.role === 'manager') {
+                const query: Where = { team: { equals: user.id } };
+                return query;
+            }
+            const query: Where = { assignedTo: { equals: user.id } };
+            return query;
         },
 
         delete: ({ req }) => {
-            const user = req.user;
+            const user = req.user as User | null;
             if (!user) return false;
             if (user.role === 'admin') return true;
-            if (user.role === 'manager') return { team: { equals: user.id } } as any;
-            return { assignedTo: { equals: user.id } } as any;
+            if (user.role === 'manager') {
+                const query: Where = { team: { equals: user.id } };
+                return query;
+            }
+            const query: Where = { assignedTo: { equals: user.id } };
+            return query;
         },
     },
 
@@ -200,13 +215,13 @@ export const Tasks: CollectionConfig = {
 
                 // Team mapping: resolve assigned user's manager
                 const newAssignedId =
-                    typeof data.assignedTo === 'object'
-                        ? (data.assignedTo as any)?.id
+                    data.assignedTo && typeof data.assignedTo === 'object'
+                        ? data.assignedTo.id
                         : data.assignedTo;
 
                 const oldAssignedId =
-                    typeof originalDoc?.assignedTo === 'object'
-                        ? (originalDoc?.assignedTo as any)?.id
+                    originalDoc?.assignedTo && typeof originalDoc.assignedTo === 'object'
+                        ? originalDoc.assignedTo.id
                         : originalDoc?.assignedTo;
 
                 if (newAssignedId && newAssignedId !== oldAssignedId) {
@@ -215,8 +230,8 @@ export const Tasks: CollectionConfig = {
                             collection: 'users',
                             id: newAssignedId,
                             depth: 0,
-                        });
-                        data.team = (assignedUser as any)?.manager || null;
+                        }) as User | null;
+                        data.team = assignedUser?.manager || null;
                     } catch (err) {
                         req.payload.logger?.error?.(
                             { newAssignedId, error: err },
@@ -228,17 +243,17 @@ export const Tasks: CollectionConfig = {
                 // Status transition validation (skip on create)
                 if (operation === 'create' || !data.status || data.status === originalDoc?.status) return;
 
-                const user = req.user;
+                const user = req.user as User | null;
                 if (!user) throw new Error('Not authenticated');
 
                 const prevStatus = originalDoc?.status || 'pending';
 
                 const assignedId =
-                    typeof originalDoc?.assignedTo === 'object'
-                        ? (originalDoc?.assignedTo as any)?.id
+                    originalDoc?.assignedTo && typeof originalDoc.assignedTo === 'object'
+                        ? originalDoc.assignedTo.id
                         : originalDoc?.assignedTo;
 
-                if ((user.role as string) !== 'admin' && (user.role as string) !== 'manager' && user.id !== assignedId) {
+                if (user.role !== 'admin' && user.role !== 'manager' && user.id !== assignedId) {
                     throw new Error('Only the assigned user can change task status');
                 }
 
@@ -269,8 +284,8 @@ export const Tasks: CollectionConfig = {
         afterChange: [
             async ({ doc, operation, req }) => {
                 const assignedToId =
-                    typeof doc.assignedTo === 'object'
-                        ? (doc.assignedTo as any)?.id
+                    doc.assignedTo && typeof doc.assignedTo === 'object'
+                        ? doc.assignedTo.id
                         : doc.assignedTo;
 
                 if (assignedToId) {

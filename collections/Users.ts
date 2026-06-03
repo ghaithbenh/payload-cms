@@ -1,4 +1,5 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Where } from 'payload'
+import type { User } from '@/payload-types'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -8,27 +9,29 @@ export const Users: CollectionConfig = {
   },
   auth: true,
   access: {
-    create: ({ req }) => (req.user?.role as string) === 'admin',
+    create: ({ req }) => req.user?.role === 'admin',
     read: ({ req }) => {
-      const user = req.user
+      const user = req.user as User | null
       if (!user) return false
-      if ((user.role as string) !== 'user') return true
+      if (user.role !== 'user') return true
 
       const managerId =
         user.manager && typeof user.manager === 'object'
-          ? (user.manager as any).id
+          ? user.manager.id
           : user.manager
 
       if (managerId) {
-        return {
+        const query: Where = {
           or: [{ id: { equals: user.id } }, { id: { equals: managerId } }],
-        } as any
+        }
+        return query
       }
 
-      return { id: { equals: user.id } } as any
+      const query: Where = { id: { equals: user.id } }
+      return query
     },
-    update: ({ req }) => (req.user?.role as string) === 'admin',
-    delete: ({ req }) => (req.user?.role as string) === 'admin',
+    update: ({ req }) => req.user?.role === 'admin',
+    delete: ({ req }) => req.user?.role === 'admin',
   },
   fields: [
     {
@@ -50,8 +53,8 @@ export const Users: CollectionConfig = {
         { label: 'User', value: 'user' },
       ],
       access: {
-        create: ({ req }) => (req.user?.role as string) === 'admin',
-        update: ({ req }) => (req.user?.role as string) === 'admin',
+        create: ({ req }) => req.user?.role === 'admin',
+        update: ({ req }) => req.user?.role === 'admin',
       },
     },
     {

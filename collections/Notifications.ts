@@ -1,4 +1,5 @@
-import type { CollectionConfig } from "payload";
+import type { CollectionConfig, Where } from "payload";
+import type { User } from "@/payload-types";
 
 export const Notifications: CollectionConfig = {
     slug: "notifications",
@@ -10,24 +11,26 @@ export const Notifications: CollectionConfig = {
 
     access: {
         create: ({ req }) => {
-            const user = req.user;
-            if (!user) return false;
-            return true;
+            return {
+                userId: { equals: req.user?.id },
+            };
         },
         read: ({ req }) => {
-            const user = req.user;
+            const user = req.user as User | null;
             if (!user) return false;
-            return { userId: { equals: user.id } } as any;
+            const query: Where = { userId: { equals: user.id } };
+            return query;
         },
         update: ({ req }) => {
-            const user = req.user;
+            const user = req.user as User | null;
             if (!user) return false;
-            return { userId: { equals: user.id } } as any;
+            const query: Where = { userId: { equals: user.id } };
+            return query;
         },
         delete: ({ req }) => {
-            const user = req.user;
+            const user = req.user as User | null;
             if (!user) return false;
-            return (user.role as string) === 'admin';
+            return user.role === 'admin';
         },
     },
 

@@ -37,12 +37,14 @@ export default buildConfig({
   collections: [Users, Media, Pages, Products, ContactSubmissions,
     Subscriptions, Categories, Team, Documents, Videos, Tasks, Notifications,],
   editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET || "",
+  secret: process.env.PAYLOAD_SECRET || (() => {
+    throw new Error('PAYLOAD_SECRET is required');
+  })(),
   typescript: {
     outputFile: path.resolve(dirname, "payload-types.ts"),
   },
   db: mongooseAdapter({
-    url: process.env.DATABASE_URL || "",
+    url: process.env.DATABASE_URL || false,
   }),
   sharp,
   plugins: [],
