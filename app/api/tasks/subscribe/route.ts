@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   try {
     let payload, user
     try {
-      ;({ payload, user } = await authenticateRequest(request))
+      ; ({ payload, user } = await authenticateRequest(request))
     } catch {
       return unauthorizedResponse()
     }
@@ -108,13 +108,19 @@ export async function GET(request: Request) {
                 return
               }
 
-              const task = await payload.findByID({
-                collection: 'tasks',
-                id,
-                depth: 2,
-                overrideAccess: true,
-                user,
-              })
+              let task
+              try {
+                task = await payload.findByID({
+                  collection: 'tasks',
+                  id,
+                  depth: 2,
+                  overrideAccess: true,
+                  user,
+                })
+              } catch (err: any) {
+                if (err?.status === 404) return
+                throw err
+              }
               if (!task) return
 
               const assignedId =
