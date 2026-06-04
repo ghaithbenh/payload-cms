@@ -5,7 +5,12 @@ import type { Connection } from 'mongoose'
 
 export async function GET(request: Request) {
   try {
-    const { payload, user } = await authenticateRequest(request)
+    let payload, user
+    try {
+      ;({ payload, user } = await authenticateRequest(request))
+    } catch {
+      return unauthorizedResponse()
+    }
 
     if (!user) {
       return unauthorizedResponse()

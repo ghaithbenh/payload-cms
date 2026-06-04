@@ -43,11 +43,12 @@ describe('Tasks Subscribe SSE Route', () => {
     expect(unauthorizedResponse).toHaveBeenCalled()
   })
 
-  it('returns 500 if authenticateRequest throws', async () => {
+  it('returns 401 if authenticateRequest throws', async () => {
     vi.mocked(authenticateRequest).mockRejectedValueOnce(new Error('Auth failed'))
     const req = new Request('http://localhost/api/tasks/subscribe')
     const res = await GET(req)
-    expect(res.status).toBe(500)
+    expect(res.status).toBe(401)
+    expect(unauthorizedResponse).toHaveBeenCalled()
   })
 
   it('successfully connects and handles change stream update, delete, error fallback to polling, and heartbeats', async () => {
@@ -222,5 +223,19 @@ describe('Tasks Subscribe SSE Route', () => {
     )
 
     controller.abort()
+  })
+  it('returns 500 if checkRateLimit throws unexpectedly', async () => {
+    const mockUser = { id: 'user-1' }
+    vi.mocked(authenticateRequest).mockResolvedValueOnce({
+      payload: {} as unknown as Payload,
+      user: mockUser as unknown as User,
+    })
+    vi.mocked(checkRateLimit).mockRejectedValueOnce(new Error('unexpected'))
+
+    const req = new Request('http://localhost/api/tasks/subscribe')
+    const res = await GET(req)
+
+    expect(res.status).toBe(500)
+    expect(errorResponse).toHaveBeenCalled()
   })
 })

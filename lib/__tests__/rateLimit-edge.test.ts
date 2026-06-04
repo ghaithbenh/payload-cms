@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getClientIp, getRoleLimits, ROLE_LIMITS, type UserRole } from '../rateLimit'
+import { getClientIp, getRoleLimits, ROLE_LIMITS, calculateRetryAfter, type UserRole } from '../rateLimit'
 
 describe('getClientIp', () => {
   function mockRequest(headers: Record<string, string>): Request {
@@ -81,5 +81,19 @@ describe('ROLE_LIMITS', () => {
     const windows = Object.values(ROLE_LIMITS).map(t => t.windowSeconds)
     expect(new Set(windows).size).toBe(1)
     expect(windows[0]).toBe(60)
+  })
+})
+
+describe('calculateRetryAfter', () => {
+  it('returns positive seconds when reset is in the future', () => {
+    const reset = Math.floor(Date.now() / 1000) + 30
+    const retryAfter = calculateRetryAfter(reset)
+    expect(retryAfter).toBeGreaterThanOrEqual(29)
+    expect(retryAfter).toBeLessThanOrEqual(31)
+  })
+
+  it('returns zero or negative when reset is in the past', () => {
+    const reset = Math.floor(Date.now() / 1000) - 10
+    expect(calculateRetryAfter(reset)).toBeLessThanOrEqual(0)
   })
 })

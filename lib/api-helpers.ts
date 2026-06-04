@@ -1,6 +1,6 @@
 import { getPayload } from 'payload'
 import config from '@/payload.config'
-import { rateLimit, getClientIp, getRoleLimits, type UserRole } from './rateLimit'
+import { rateLimit, getClientIp, getRoleLimits, calculateRetryAfter, type UserRole } from './rateLimit'
 import { parseQueryParams } from './query-params'
 import { logger } from './logger'
 import { AppError, AuthError, ForbiddenError, ValidationError, RateLimitError } from './errors'
@@ -37,7 +37,7 @@ export function buildRateLimitHeaders(result: { limit: number; remaining: number
     'X-RateLimit-Limit': String(result.limit),
     'X-RateLimit-Remaining': String(result.remaining),
     'X-RateLimit-Reset': String(result.reset),
-    'Retry-After': String(result.reset - Math.floor(Date.now() / 1000)),
+    'Retry-After': String(calculateRetryAfter(result.reset)),
   }
 }
 
@@ -52,7 +52,7 @@ export async function checkRateLimit(
 
   if (!result.allowed) {
     logger.warn({ prefix: options.prefix, ip, role: options.role || 'unknown' }, 'Rate limit exceeded')
-    const err = new RateLimitError(result.reset - Math.floor(Date.now() / 1000), result.limit, result.remaining, result.reset)
+    const err = new RateLimitError(calculateRetryAfter(result.reset), result.limit, result.remaining, result.reset)
     return {
       response: Response.json(err.toJSON(), { status: 429, headers }),
       headers,
@@ -80,8 +80,11 @@ export function errorResponse(error: unknown) {
   }
 
   const message = error instanceof Error ? error.message : 'Internal Server Error'
-  const status = error instanceof Error && 'statusCode' in error
-    ? (error as { statusCode?: number }).statusCode!
+  const rawStatus = error instanceof Error && 'statusCode' in error
+    ? (error as { statusCode?: unknown }).statusCode
+    : undefined
+  const status = typeof rawStatus === 'number' && rawStatus >= 400 && rawStatus <= 599
+    ? rawStatus
     : 500
   const code = error instanceof Error && 'code' in error
     ? (error as { code?: string }).code!

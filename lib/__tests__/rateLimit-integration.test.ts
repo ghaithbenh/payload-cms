@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 // Mock Redis
 const { mockRedis, mockPipeline } = vi.hoisted(() => {
@@ -67,7 +67,22 @@ describe('rateLimit', () => {
     expect(mockRedis.expire).not.toHaveBeenCalled()
   })
 
-  it('returns allowed=true when Redis fails (fail-open)', async () => {
+  it('returns allowed=false when Redis fails (fail-closed by default)', async () => {
+    vi.mocked(ensureRedis).mockRejectedValueOnce(new Error('conn refused'))
+
+    const result = await rateLimit('test:ip', 100, 60)
+
+    expect(result.allowed).toBe(false)
+    expect(result.remaining).toBe(0)
+    expect(logger.error).toHaveBeenCalled()
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('returns allowed=true when Redis fails and RATE_LIMIT_FAIL_OPEN=true', async () => {
+    vi.stubEnv('RATE_LIMIT_FAIL_OPEN', 'true')
     vi.mocked(ensureRedis).mockRejectedValueOnce(new Error('conn refused'))
 
     const result = await rateLimit('test:ip', 100, 60)
@@ -77,12 +92,12 @@ describe('rateLimit', () => {
     expect(logger.error).toHaveBeenCalled()
   })
 
-  it('returns allowed=true when pipeline returns null', async () => {
+  it('returns allowed=false when pipeline returns null', async () => {
     mockPipeline.exec.mockResolvedValueOnce(null)
 
     const result = await rateLimit('test:ip', 100, 60)
 
-    expect(result.allowed).toBe(true)
+    expect(result.allowed).toBe(false)
     expect(logger.error).toHaveBeenCalled()
   })
 
@@ -96,8 +111,8 @@ describe('rateLimit', () => {
     expect(result.reset).toBeLessThanOrEqual(now + 46)
   })
 
-  it('handles null/undefined fields in pipeline results (lines 54-55)', async () => {
-    mockPipeline.exec.mockResolvedValueOnce([])
+  it('handles null/undefined fields in pipeline results', async () => {
+    mockPipeline.exec.mockResolvedValueOnce([[null, null], [null, null]])
     const result = await rateLimit('test:ip', 100, 60)
     expect(result.allowed).toBe(true)
     expect(result.remaining).toBe(100)

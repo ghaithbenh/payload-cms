@@ -11,6 +11,7 @@ vi.mock('@/lib/queue', () => ({ startNotificationWorker: vi.fn() }))
 vi.mock('../rateLimit', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
   getRoleLimits: vi.fn(() => ({ limit: 10, windowSeconds: 60 })),
+  calculateRetryAfter: vi.fn((reset: number) => reset - Math.floor(Date.now() / 1000)),
   rateLimit: vi.fn(),
 }))
 

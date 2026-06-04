@@ -1,13 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { BaseAppError, AppError, AuthError, ForbiddenError, NotFoundError, RateLimitError, ValidationError } from '../errors'
+import { AppError, AuthError, ForbiddenError, NotFoundError, RateLimitError, ValidationError } from '../errors'
 
-describe('BaseAppError', () => {
-  it('exports both BaseAppError and AppError', () => {
-    const err = new BaseAppError('test')
-    expect(err instanceof BaseAppError).toBe(true)
-    expect(err instanceof AppError).toBe(true)
-  })
-
+describe('AppError', () => {
   it('creates error with default values', () => {
     const err = new AppError('test')
     expect(err.message).toBe('test')
@@ -74,7 +68,14 @@ describe('RateLimitError', () => {
     const res = errorResponse(err)
     expect(res.status).toBe(429)
     const body = await res.json()
-    expect(body).toEqual({ error: 'Too many requests', code: 'RATE_LIMIT_EXCEEDED' })
+    expect(body).toEqual({
+      error: 'Too many requests',
+      code: 'RATE_LIMIT_EXCEEDED',
+      retryAfter: 30,
+      limit: 100,
+      remaining: 0,
+      reset: 1234567890,
+    })
   })
 })
 
@@ -119,5 +120,31 @@ describe('errorResponse handles all error types', () => {
     expect(res.status).toBe(418)
     const body = await res.json()
     expect(body).toEqual({ error: "I'm a teapot", code: 'TEAPOT' })
+  })
+
+  it('defaults to 500 when statusCode is out of valid range', async () => {
+    const { errorResponse } = await import('../api-helpers')
+    class BadStatusError extends Error {
+      statusCode = 999
+      code = 'BAD'
+      constructor() {
+        super('bad status')
+      }
+    }
+    const res = errorResponse(new BadStatusError())
+    expect(res.status).toBe(500)
+  })
+
+  it('defaults to 500 when statusCode is not a number', async () => {
+    const { errorResponse } = await import('../api-helpers')
+    class StringStatusError extends Error {
+      statusCode = '404'
+      code = 'STRING_STATUS'
+      constructor() {
+        super('string status')
+      }
+    }
+    const res = errorResponse(new StringStatusError())
+    expect(res.status).toBe(500)
   })
 })

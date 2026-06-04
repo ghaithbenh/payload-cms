@@ -1,6 +1,9 @@
 import { ensureRedis } from './redis'
 import { logger } from './logger'
-import { AppError } from './errors'
+
+export function calculateRetryAfter(reset: number): number {
+  return reset - Math.floor(Date.now() / 1000)
+}
 
 export interface RateLimitResult {
   allowed: boolean
@@ -49,7 +52,13 @@ export async function rateLimit(
 
     const results = await pipeline.exec()
     if (!results) {
-      throw new AppError('Redis transaction failed', 500, 'RATE_LIMIT_ERROR')
+      logger.error({}, 'Redis pipeline returned null')
+      return {
+        allowed: false,
+        remaining: 0,
+        limit,
+        reset: Math.floor(Date.now() / 1000) + windowSeconds,
+      }
     }
 
     const count = (results[0]?.[1] as number) || 0
@@ -66,9 +75,17 @@ export async function rateLimit(
     return { allowed, remaining, limit, reset }
   } catch (err) {
     logger.error({ err: err instanceof Error ? err.message : String(err) }, 'Rate limit execution failed')
+    if (process.env.RATE_LIMIT_FAIL_OPEN === 'true') {
+      return {
+        allowed: true,
+        remaining: 1,
+        limit,
+        reset: Math.floor(Date.now() / 1000) + windowSeconds,
+      }
+    }
     return {
-      allowed: true,
-      remaining: 1,
+      allowed: false,
+      remaining: 0,
       limit,
       reset: Math.floor(Date.now() / 1000) + windowSeconds,
     }
