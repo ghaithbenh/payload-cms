@@ -1,13 +1,14 @@
 "use client";
 
 import type { DefaultCellComponentProps } from "payload";
+import Link from "next/link";
 
 const OpenAppCell: React.FC<DefaultCellComponentProps> = ({ rowData }) => {
   const id = rowData?.id as string;
   if (!id) return null;
 
   return (
-    <a
+    <Link
       href={`${process.env.NEXT_PUBLIC_FRONTEND_URL}/tasks/${id}`}
       target="_blank"
       rel="noopener noreferrer"
@@ -26,7 +27,7 @@ const OpenAppCell: React.FC<DefaultCellComponentProps> = ({ rowData }) => {
       }}
     >
       Open App
-    </a>
+    </Link>
   );
 };
 

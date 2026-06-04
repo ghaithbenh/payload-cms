@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { use, useMemo } from "react";
 import { useTaskSubscription } from "@/hooks/useTaskSubscription";
 
@@ -70,7 +72,7 @@ export default function TasksPage({ params }: { params: Promise<{ id: string }> 
 
 
         {tasks.map((task) => (
-          <a
+          <Link
             key={task.id}
             href={`/tasks/${task.id}`}
             className={`block px-3 py-2 rounded-lg text-sm transition
@@ -85,7 +87,7 @@ export default function TasksPage({ params }: { params: Promise<{ id: string }> 
                 </span>
               )}
             </div>
-          </a>
+          </Link>
         ))}
         </div>
       </div>
@@ -97,12 +99,12 @@ export default function TasksPage({ params }: { params: Promise<{ id: string }> 
         ) : (
           <div className="bg-white rounded-xl shadow-lg p-6 max-w-4xl">
 
-            <a
+            <Link
               href="/tasks"
               className="inline-block mb-4 text-sm text-blue-600 hover:underline"
             >
               ← Back to tasks
-            </a>
+            </Link>
 
             <div className="flex items-center justify-between">
               <h1 className="text-2xl text-red-900 font-bold mb-2">
@@ -134,9 +136,13 @@ export default function TasksPage({ params }: { params: Promise<{ id: string }> 
             </p>
 
             {selectedTask.taskPic?.url && (
-              <img
+              <Image
                 src={selectedTask.taskPic.url}
+                alt={selectedTask.title}
+                width={800}
+                height={600}
                 className="w-full rounded-lg mb-6"
+                style={{ height: "auto" }}
               />
             )}
 

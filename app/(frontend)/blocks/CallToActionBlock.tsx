@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { Page } from '@/payload-types'
 
 type BlockData = Page['layout'][number]
@@ -30,7 +31,7 @@ export function CallToActionBlock({ block: rawBlock }: { block: BlockData }) {
           </p>
         )}
         {link?.label && href && (
-          <a
+          <Link
             href={href}
             target={link.newTab ? '_blank' : undefined}
             rel={link.newTab ? 'noopener noreferrer' : undefined}
@@ -44,7 +45,7 @@ export function CallToActionBlock({ block: rawBlock }: { block: BlockData }) {
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300">
               <path d="M3 8h10M9 4l4 4-4 4" />
             </svg>
-          </a>
+          </Link>
         )}
       </div>
     </section>

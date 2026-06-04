@@ -1,8 +1,8 @@
 import { headers as getHeaders } from 'next/headers.js'
 import Image from 'next/image'
 import { getPayload } from 'payload'
-import { fileURLToPath } from 'url'
 
+import Link from 'next/link'
 import config from '@/payload.config'
 import { cacheAside, listKey, CACHE_TTL } from '@/lib/cache'
 import type { Page } from '@/payload-types'
@@ -20,7 +20,7 @@ export default async function HomePage() {
     CACHE_TTL.pages,
   )
 
-  const fileURL = `vscode://file/${fileURLToPath(import.meta.url)}`
+
 
   return (
     <div className="flex flex-col justify-between items-center min-h-screen p-12 max-w-5xl mx-auto max-[400px]:p-6">
@@ -37,14 +37,12 @@ export default async function HomePage() {
           {user ? `Welcome back, ${user.email}` : 'Welcome to your new project.'}
         </h1>
         <div className="flex items-center gap-2.5 mt-2 animate-fade-up [animation-delay:0.24s] opacity-0">
-          <a
+          <Link
             className="no-underline font-mono text-[0.65rem] font-semibold uppercase tracking-[0.14em] px-4 py-2 text-ink bg-light border border-ink hover:bg-accent hover:border-accent hover:text-light hover:-translate-y-px transition-all duration-200"
             href={payloadConfig.routes.admin}
-            rel="noopener noreferrer"
-            target="_blank"
           >
             Admin
-          </a>
+          </Link>
         </div>
 
         {pages.docs.length > 0 && (
@@ -53,16 +51,16 @@ export default async function HomePage() {
               Pages
             </span>
             <ul className="list-none p-0 m-0">
-              {pages.docs.map((page: Page, i: number) => (
+              {pages.docs.map((page: Page) => (
                 <li key={page.id}>
-                  <a
+                  <Link
                     href={`/${page.slug}`}
                     className="grid grid-cols-[1fr_auto_auto] items-center gap-4 py-3 border-b border-rule no-underline hover:pl-2 transition-all duration-200 group"
                   >
                     <span className="font-mono text-[0.85rem] font-medium text-light">{page.title}</span>
                     <span className="font-mono text-[0.6rem] text-muted tracking-tight">/{page.slug}</span>
                     <span className="text-[0.75rem] text-muted group-hover:text-accent group-hover:translate-x-1 transition-all duration-200">&rarr;</span>
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
