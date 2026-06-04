@@ -1,4 +1,4 @@
-import { authenticateRequest, unauthorizedResponse } from '@/lib/api-helpers'
+import { authenticateRequest, checkRateLimit, unauthorizedResponse } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
 import type { User, Task } from '@/payload-types'
 import type { Connection } from 'mongoose'
@@ -10,6 +10,9 @@ export async function GET(request: Request) {
     if (!user) {
       return unauthorizedResponse()
     }
+
+    const { headers: rateLimitHeaders, response: rateLimitResponse } = await checkRateLimit(request, { prefix: 'tasks:subscribe', role: (user as User).role })
+    if (rateLimitResponse) return rateLimitResponse
 
     const encoder = new TextEncoder()
 
@@ -144,6 +147,7 @@ export async function GET(request: Request) {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-store',
         Connection: 'keep-alive',
+        ...rateLimitHeaders,
       },
     })
   } catch (err) {

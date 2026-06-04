@@ -26,6 +26,9 @@ export default buildConfig({
   onInit: async (payload) => {
     await startNotificationWorker(payload);
   },
+  cors: process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
+    : ['http://localhost:3000'],
   admin: {
     user: Users.slug,
     importMap: {

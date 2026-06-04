@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { GET } from '../monitoring/queue/route'
-import { authenticateRequest, unauthorizedResponse, forbiddenResponse, errorResponse } from '@/lib/api-helpers'
+import { authenticateRequest, checkRateLimit, unauthorizedResponse, forbiddenResponse, errorResponse } from '@/lib/api-helpers'
 import { getQueueMetrics } from '@/lib/queue'
 import type { Payload } from 'payload'
 import type { User } from '@/payload-types'
 
 vi.mock('@/lib/api-helpers', () => ({
   authenticateRequest: vi.fn(),
+  checkRateLimit: vi.fn(() => Promise.resolve({ response: null, headers: {} })),
   unauthorizedResponse: vi.fn(() => new Response('unauthorized', { status: 401 })),
   forbiddenResponse: vi.fn(() => new Response('forbidden', { status: 403 })),
   errorResponse: vi.fn((err) => new Response('error', { status: 500 })),

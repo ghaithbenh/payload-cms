@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { EventEmitter } from 'events'
 import { GET } from '../tasks/subscribe/route'
-import { authenticateRequest, unauthorizedResponse } from '@/lib/api-helpers'
+import { authenticateRequest, checkRateLimit, unauthorizedResponse } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
 import type { Payload } from 'payload'
 import type { User } from '@/payload-types'
 
 vi.mock('@/lib/api-helpers', () => ({
   authenticateRequest: vi.fn(),
+  checkRateLimit: vi.fn(() => Promise.resolve({ response: null, headers: {} })),
   unauthorizedResponse: vi.fn(() => new Response('unauthorized', { status: 401 })),
 }))
 
