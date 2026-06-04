@@ -29,14 +29,7 @@ test.describe('Rate Limiting', () => {
     expect(res.status()).toBe(401)
 
     // Verify 429 format by checking the buildRateLimitHeaders contract:
-    // limit > 0, remaining >= 0, Retry-After is a number string
-    const headerPatterns = {
-      'x-ratelimit-limit': /^\d+$/,
-      'x-ratelimit-remaining': /^\d+$/,
-      'x-ratelimit-reset': /^\d+$/,
-      'retry-after': /^\d+$/,
-    }
-
+    // limit > 0, remaining >= 0, Retry-After is a number string.
     // These are NOT present on 401 (auth-first), but the format contract
     // is defined by buildRateLimitHeaders — we verify the types are correct
     // when they DO appear on 429 responses.

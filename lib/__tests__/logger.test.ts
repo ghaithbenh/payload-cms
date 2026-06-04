@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { logger, childLogger } from '../logger'
 
 describe('logger', () => {
@@ -23,12 +23,12 @@ describe('logger', () => {
   it('runs production level formatter', async () => {
     vi.resetModules()
     const originalNodeEnv = process.env.NODE_ENV
-    process.env.NODE_ENV = 'production'
+    ;(process.env as Record<string, string>).NODE_ENV = 'production'
     const { logger: prodLogger } = await import('../logger')
     
     prodLogger.info('test production logger')
     
-    process.env.NODE_ENV = originalNodeEnv
+    ;(process.env as Record<string, string>).NODE_ENV = originalNodeEnv
     vi.resetModules()
   })
 })

@@ -3,7 +3,7 @@ import config from '@/payload.config'
 import { rateLimit, getClientIp, getRoleLimits, calculateRetryAfter, type UserRole } from './rateLimit'
 import { parseQueryParams } from './query-params'
 import { logger } from './logger'
-import { AppError, AuthError, ForbiddenError, ValidationError, RateLimitError } from './errors'
+import { AppError, RateLimitError } from './errors'
 
 export interface RateLimitOptions {
   prefix: string

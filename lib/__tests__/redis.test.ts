@@ -32,8 +32,6 @@ vi.mock('ioredis', () => {
   }
 })
 
-import Redis from 'ioredis'
-
 describe('redis client helper', () => {
   const originalEnv = { ...process.env }
 

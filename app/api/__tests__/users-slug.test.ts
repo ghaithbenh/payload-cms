@@ -27,7 +27,7 @@ vi.mock('@/lib/api-helpers', () => ({
   checkRateLimit: vi.fn(),
   parseQueryParams: vi.fn(() => ({})),
   unauthorizedResponse: vi.fn(() => new Response('unauthorized', { status: 401 })),
-  errorResponse: vi.fn((err) => new Response('error', { status: 500 })),
+  errorResponse: vi.fn(() => new Response('error', { status: 500 })),
 }))
 
 vi.mock('@/lib/cache', () => ({

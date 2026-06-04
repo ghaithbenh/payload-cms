@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { docKey, listKey, versionKey, CACHE_TTL } from '../cache'
 
 describe('docKey', () => {
@@ -59,7 +59,7 @@ describe('versionKey', () => {
 
 describe('CACHE_TTL', () => {
   it('all TTLs are positive numbers', () => {
-    for (const [slug, ttl] of Object.entries(CACHE_TTL)) {
+    for (const [, ttl] of Object.entries(CACHE_TTL)) {
       expect(typeof ttl).toBe('number')
       expect(ttl).toBeGreaterThan(0)
     }

@@ -51,8 +51,6 @@ export async function GET(request: Request) {
           try { controller.close() } catch { /* ignore */ }
         }
 
-        let pollTimer: ReturnType<typeof setInterval> | null = null
-
         const startPolling = () => {
           const knownIds = new Set<string>()
           let busy = false
@@ -96,7 +94,7 @@ export async function GET(request: Request) {
           }
 
           poll()
-          pollTimer = setInterval(poll, 3000)
+          setInterval(poll, 3000)
         }
 
         try {

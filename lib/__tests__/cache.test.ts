@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { docKey, listKey, versionKey, CACHE_TTL } from '../cache'
 
 describe('cache key builders', () => {

@@ -4,7 +4,7 @@ import type { User } from '@/payload-types'
 
 export async function GET(request: Request) {
   try {
-    const { payload, user } = await authenticateRequest(request)
+    const { user } = await authenticateRequest(request)
 
     if (!user) {
       return unauthorizedResponse()
