@@ -1,9 +1,11 @@
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import type { Page } from '@/payload-types'
 
-type FAQBlockData = Extract<Page['layout'][number], { blockType: 'faq' }>
+type BlockData = Page['layout'][number]
+type FAQBlockData = Extract<BlockData, { blockType: 'faq' }>
 
-export function FAQBlock({ block }: { block: FAQBlockData }) {
+export function FAQBlock({ block: rawBlock }: { block: BlockData }) {
+  const block = rawBlock as FAQBlockData
   return (
     <section className="px-8 py-24 bg-surface">
       <div className="max-w-[720px] mx-auto">

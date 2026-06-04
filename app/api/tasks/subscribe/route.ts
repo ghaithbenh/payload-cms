@@ -3,6 +3,12 @@ import { logger } from '@/lib/logger'
 import type { User, Task } from '@/payload-types'
 import type { Connection } from 'mongoose'
 
+interface ChangeStreamEvent {
+  operationType: string
+  documentKey: { _id: { toString(): string } }
+  fullDocument?: Record<string, unknown>
+}
+
 export async function GET(request: Request) {
   try {
     let payload, user
@@ -64,7 +70,7 @@ export async function GET(request: Request) {
               })
 
               const docs = result.docs as Task[] || []
-              const incoming = new Set(docs.map((t: any) => t.id))
+              const incoming = new Set(docs.map((t: Task) => t.id))
 
               if (knownIds.size > 0) {
                 for (const task of docs) {
@@ -80,7 +86,7 @@ export async function GET(request: Request) {
                   }
                 }
               } else {
-                docs.forEach((t: any) => knownIds.add(t.id))
+                docs.forEach((t: Task) => knownIds.add(t.id))
               }
             } catch (err) {
               logger.error({ err }, 'Poll error')
@@ -98,7 +104,7 @@ export async function GET(request: Request) {
           const collection = connection.collection('tasks')
           const changeStream = collection.watch([], { fullDocument: 'updateLookup' })
 
-          changeStream.on('change', async (change: any) => {
+          changeStream.on('change', async (change: ChangeStreamEvent) => {
             if (closed) return
             try {
               const id = change.documentKey._id.toString()
@@ -117,8 +123,8 @@ export async function GET(request: Request) {
                   overrideAccess: true,
                   user,
                 })
-              } catch (err: any) {
-                if (err?.status === 404) return
+              } catch (err: unknown) {
+                if (err instanceof Error && 'status' in err && (err as { status: unknown }).status === 404) return
                 throw err
               }
               if (!task) return

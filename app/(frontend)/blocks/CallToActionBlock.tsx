@@ -1,14 +1,16 @@
 import type { Page } from '@/payload-types'
 
-type CallToActionBlockData = Extract<Page['layout'][number], { blockType: 'callToAction' }>
+type BlockData = Page['layout'][number]
+type CallToActionBlockData = Extract<BlockData, { blockType: 'callToAction' }>
 
-export function CallToActionBlock({ block }: { block: CallToActionBlockData }) {
+export function CallToActionBlock({ block: rawBlock }: { block: BlockData }) {
+  const block = rawBlock as CallToActionBlockData
   const isPrimary = (block.variant || 'primary') === 'primary'
   const link = block.link
   let href = ''
   if (link?.type === 'internal' && link.reference) {
     const reference = link.reference
-    href = typeof reference === 'object' ? `/${reference.slug}` : `/${reference}`
+    href = typeof reference.value === 'object' ? `/${reference.value.slug}` : `/${reference.value}`
   } else if (link?.type === 'custom') {
     href = link.url || ''
   }

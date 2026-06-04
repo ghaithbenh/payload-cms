@@ -12,7 +12,9 @@ const payloadPATCH = REST_PATCH(payloadConfig)
 const payloadPUT = REST_PUT(payloadConfig)
 const payloadOPTIONS = REST_OPTIONS(payloadConfig)
 
-async function withAuthAndRateLimit(method: Function, request: Request, context: { params: Promise<{ slug?: string[] }> }) {
+type PayloadRouteHandler = (request: Request, context: { params: Promise<{ slug?: string[] }> }) => Promise<Response>
+
+async function withAuthAndRateLimit(method: PayloadRouteHandler, request: Request, context: { params: Promise<{ slug?: string[] }> }) {
   const resolvedParams = await context.params
   const slug = resolvedParams.slug || []
   const isPublicRoute = slug.length === 1 && ['login', 'first-register', 'forgot-password', 'reset-password'].includes(slug[0])

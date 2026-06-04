@@ -1,15 +1,18 @@
 import Image from 'next/image'
-import type { Page } from '@/payload-types'
+import type { Page, Media } from '@/payload-types'
 
-type HeroBlockData = Extract<Page['layout'][number], { blockType: 'hero' }>
+type BlockData = Page['layout'][number]
+type HeroBlockData = Extract<BlockData, { blockType: 'hero' }>
 
-export function HeroBlock({ block }: { block: HeroBlockData }) {
-  const hasImage = block.backgroundImage && typeof block.backgroundImage !== 'string'
+export function HeroBlock({ block: rawBlock }: { block: BlockData }) {
+  const block = rawBlock as HeroBlockData
+  const bgImage = block.backgroundImage && typeof block.backgroundImage === 'object' ? block.backgroundImage as Media : null
+  const hasImage = bgImage !== null
   const link = block.link
   let href = ''
   if (link?.type === 'internal' && link.reference) {
     const reference = link.reference
-    href = typeof reference === 'object' ? `/${reference.slug}` : `/${reference}`
+    href = typeof reference.value === 'object' ? `/${reference.value.slug}` : `/${reference.value}`
   } else if (link?.type === 'custom') {
     href = link.url || ''
   }
@@ -21,8 +24,8 @@ export function HeroBlock({ block }: { block: HeroBlockData }) {
       {hasImage && (
         <div className="absolute inset-0 z-0">
           <Image
-            src={block.backgroundImage.url}
-            alt={block.backgroundImage.alt || ''}
+            src={bgImage.url!}
+            alt={bgImage.alt || ''}
             fill
             className="object-cover brightness-[0.45] contrast-110"
           />

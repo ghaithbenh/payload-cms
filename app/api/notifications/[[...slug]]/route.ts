@@ -12,7 +12,9 @@ const payloadPATCH = REST_PATCH(payloadConfig)
 const payloadPUT = REST_PUT(payloadConfig)
 const payloadOPTIONS = REST_OPTIONS(payloadConfig)
 
-async function withAuthAndRateLimit(method: Function, request: Request, context: { params: Promise<{ slug?: string[] }> }) {
+type PayloadRouteHandler = (request: Request, context: { params: Promise<{ slug?: string[] }> }) => Promise<Response>
+
+async function withAuthAndRateLimit(method: PayloadRouteHandler, request: Request, context: { params: Promise<{ slug?: string[] }> }) {
   const { user } = await authenticateRequest(request)
   if (!user) {
     return unauthorizedResponse()
