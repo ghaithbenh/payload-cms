@@ -2,6 +2,7 @@ import type { CollectionConfig, Where, PayloadRequest } from "payload";
 import type { User } from "@/payload-types";
 import { invalidateCollection } from "@/lib/cache";
 import { enqueueNotification } from "../lib/queue";
+import { AuthError, ForbiddenError, ValidationError } from "@/lib/errors";
 
 const adminOrManager = ({ req }: { req: PayloadRequest }) => {
     const user = req.user as User | null;
@@ -252,7 +253,7 @@ export const Tasks: CollectionConfig = {
                 if (operation === 'create' || !data.status || data.status === originalDoc?.status) return;
 
                 const user = req.user as User | null;
-                if (!user) throw new Error('Not authenticated');
+                if (!user) throw new AuthError();
 
                 const prevStatus = originalDoc?.status || 'pending';
 
@@ -262,7 +263,7 @@ export const Tasks: CollectionConfig = {
                         : originalDoc?.assignedTo;
 
                 if (user.role !== 'admin' && user.role !== 'manager' && user.id !== assignedId) {
-                    throw new Error('Only the assigned user can change task status');
+                    throw new ForbiddenError('Only the assigned user can change task status');
                 }
 
                 const validTransitions: Record<string, string> = {
@@ -272,7 +273,7 @@ export const Tasks: CollectionConfig = {
                 };
 
                 if (validTransitions[prevStatus] !== data.status) {
-                    throw new Error(
+                    throw new ValidationError(
                         `Cannot transition from "${prevStatus}" to "${data.status}". ` +
                         `Allowed: ${prevStatus} → ${validTransitions[prevStatus]}`
                     );

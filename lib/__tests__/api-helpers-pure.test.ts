@@ -111,6 +111,15 @@ describe('errorResponse', () => {
     const body = await res.json()
     expect(body).toEqual({ error: "I'm a teapot", code: 'TEAPOT' })
   })
+
+  it('logs and returns JSON for AppError with status >= 500', async () => {
+    const { AppError } = await import('../errors')
+    const error = new AppError('Internal failure', 500)
+    const res = errorResponse(error)
+    expect(res.status).toBe(500)
+    const body = await res.json()
+    expect(body.error).toBe('Internal failure')
+  })
 })
 
 describe('getPayloadClient', () => {

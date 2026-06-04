@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { EventEmitter } from 'events'
 import { GET } from '../tasks/subscribe/route'
-import { authenticateRequest, checkRateLimit, unauthorizedResponse } from '@/lib/api-helpers'
+import { authenticateRequest, checkRateLimit, unauthorizedResponse, errorResponse } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
 import type { Payload } from 'payload'
 import type { User } from '@/payload-types'
@@ -10,6 +10,7 @@ vi.mock('@/lib/api-helpers', () => ({
   authenticateRequest: vi.fn(),
   checkRateLimit: vi.fn(() => Promise.resolve({ response: null, headers: {} })),
   unauthorizedResponse: vi.fn(() => new Response('unauthorized', { status: 401 })),
+  errorResponse: vi.fn(() => new Response('error', { status: 500 })),
 }))
 
 vi.mock('@/lib/logger', () => ({
@@ -42,11 +43,11 @@ describe('Tasks Subscribe SSE Route', () => {
     expect(unauthorizedResponse).toHaveBeenCalled()
   })
 
-  it('returns 401 if authenticateRequest throws', async () => {
+  it('returns 500 if authenticateRequest throws', async () => {
     vi.mocked(authenticateRequest).mockRejectedValueOnce(new Error('Auth failed'))
     const req = new Request('http://localhost/api/tasks/subscribe')
     const res = await GET(req)
-    expect(res.status).toBe(401)
+    expect(res.status).toBe(500)
   })
 
   it('successfully connects and handles change stream update, delete, error fallback to polling, and heartbeats', async () => {

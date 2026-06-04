@@ -1,4 +1,4 @@
-import { authenticateRequest, checkRateLimit, unauthorizedResponse } from '@/lib/api-helpers'
+import { authenticateRequest, checkRateLimit, unauthorizedResponse, errorResponse } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
 import type { User, Task } from '@/payload-types'
 import type { Connection } from 'mongoose'
@@ -151,6 +151,6 @@ export async function GET(request: Request) {
       },
     })
   } catch (err) {
-    return unauthorizedResponse()
+    return errorResponse(err)
   }
 }

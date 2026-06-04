@@ -3,6 +3,7 @@ import config from '@/payload.config'
 import { rateLimit, getClientIp, getRoleLimits, type UserRole } from './rateLimit'
 import { parseQueryParams } from './query-params'
 import { logger } from './logger'
+import { AppError, AuthError, ForbiddenError, ValidationError, RateLimitError } from './errors'
 
 export interface RateLimitOptions {
   prefix: string
@@ -51,11 +52,9 @@ export async function checkRateLimit(
 
   if (!result.allowed) {
     logger.warn({ prefix: options.prefix, ip, role: options.role || 'unknown' }, 'Rate limit exceeded')
+    const err = new RateLimitError(result.reset - Math.floor(Date.now() / 1000), result.limit, result.remaining, result.reset)
     return {
-      response: Response.json(
-        { error: 'Too Many Requests', code: 'RATE_LIMITED' },
-        { status: 429, headers },
-      ),
+      response: Response.json(err.toJSON(), { status: 429, headers }),
       headers,
     }
   }
@@ -73,6 +72,13 @@ export function forbiddenResponse(message = 'Forbidden') {
 }
 
 export function errorResponse(error: unknown) {
+  if (error instanceof AppError) {
+    if (error.statusCode >= 500) {
+      logger.error({ err: error.message }, 'Internal server error')
+    }
+    return Response.json(error.toJSON(), { status: error.statusCode })
+  }
+
   const message = error instanceof Error ? error.message : 'Internal Server Error'
   const status = error instanceof Error && 'statusCode' in error
     ? (error as { statusCode?: number }).statusCode!
