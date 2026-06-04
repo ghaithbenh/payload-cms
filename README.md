@@ -71,3 +71,16 @@ Vitest → npm run test:watch and npm run test:coverage
 Playwright → npm run test:e2e
 Pino → not a test runner, it's just the logging library used inside your app code
 ```
+
+
+
+
+
+
+
+Merged lint + unit tests into one job — saves one full npm ci install
+Added Redis service container with health check to both jobs that need it
+E2E runs separately after lint/test passes, with Playwright browsers installed (chromium only — faster than full install)
+Build runs in parallel with E2E — both depend on lint-and-test, so they run concurrently
+Deploy waits for both E2E and build to pass before running
+REDIS_HOST set to 127.0.0.1 in CI (service containers bind to localhost)

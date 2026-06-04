@@ -21,6 +21,8 @@ export default defineConfig({
       provider: 'v8',
       include: ['lib/**', 'app/api/**'],
       exclude: ['lib/__tests__'],
+      reporter: ['text', 'json-summary'],
+      reportsDirectory: './coverage',
     },
   },
 })
