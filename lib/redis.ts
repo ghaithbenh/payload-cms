@@ -1,8 +1,6 @@
 import Redis, { type RedisOptions } from 'ioredis'
+import { logger } from './logger'
 
-// ---------------------------------------------------------------------------
-// Environment defaults
-// ---------------------------------------------------------------------------
 const REDIS_URL = process.env.REDIS_URL || ''
 const REDIS_HOST = process.env.REDIS_HOST || 'localhost'
 const REDIS_PORT = Number(process.env.REDIS_PORT) || 6379
@@ -14,13 +12,9 @@ const REDIS_SENTINEL_NAME = process.env.REDIS_SENTINEL_NAME || ''
 const REDIS_DB = Number(process.env.REDIS_DB) || 0
 const REDIS_ENABLE_READY_CHECK = process.env.REDIS_ENABLE_READY_CHECK !== 'false'
 
-// ---------------------------------------------------------------------------
-// Singleton
-// ---------------------------------------------------------------------------
 let client: Redis | null = null
 
 function buildOptions(): { url?: string; opts: RedisOptions } {
-  // When a full REDIS_URL is provided it takes precedence
   if (REDIS_URL) {
     return {
       url: REDIS_URL,
@@ -36,7 +30,6 @@ function buildOptions(): { url?: string; opts: RedisOptions } {
     }
   }
 
-  // Sentinel mode (high-availability)
   if (REDIS_SENTINEL_HOSTS.length > 0 && REDIS_SENTINEL_NAME) {
     return {
       opts: {
@@ -59,7 +52,6 @@ function buildOptions(): { url?: string; opts: RedisOptions } {
     }
   }
 
-  // Standard single-node mode
   return {
     opts: {
       host: REDIS_HOST,
@@ -85,27 +77,27 @@ export function getRedis(): Redis {
     client = url ? new Redis(url, opts) : new Redis(opts)
 
     client.on('error', (err) => {
-      console.error('[redis] error:', err.message)
+      logger.error({ err: err.message }, 'Redis client error')
     })
 
     client.on('connect', () => {
-      console.info('[redis] connected')
+      logger.info('Redis connected')
     })
 
     client.on('ready', () => {
-      console.info('[redis] ready')
+      logger.info('Redis ready')
     })
 
     client.on('close', () => {
-      console.warn('[redis] connection closed')
+      logger.warn('Redis connection closed')
     })
 
     client.on('reconnecting', (delay: number) => {
-      console.info(`[redis] reconnecting in ${delay}ms`)
+      logger.info({ delay }, 'Redis reconnecting')
     })
 
     client.on('end', () => {
-      console.warn('[redis] connection ended')
+      logger.warn('Redis connection ended')
     })
   }
 

@@ -67,4 +67,7 @@ npm run dev          # Start dev server
 npm run build        # Production build
 npx payload generate:types      # Regenerate TS types
 npx payload generate:importmap  # Regenerate admin import map
+Vitest → npm run test:watch and npm run test:coverage
+Playwright → npm run test:e2e
+Pino → not a test runner, it's just the logging library used inside your app code
 ```

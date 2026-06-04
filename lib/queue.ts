@@ -1,4 +1,5 @@
 import { ensureRedis } from './redis'
+import { logger } from './logger'
 import type { Payload } from 'payload'
 
 export interface NotificationJob {
@@ -14,9 +15,6 @@ const FAILED_KEY = 'queue:notifications:failed'
 
 let workerStarted = false
 
-
-//Enqueues a notification job into Redis list.
-
 export async function enqueueNotification(job: Omit<NotificationJob, 'timestamp'>) {
   try {
     const redis = await ensureRedis()
@@ -25,15 +23,12 @@ export async function enqueueNotification(job: Omit<NotificationJob, 'timestamp'
       timestamp: Date.now(),
     }
     await redis.lpush(QUEUE_KEY, JSON.stringify(fullJob))
-    console.info(`[Queue] Enqueued notification for user ${job.userId}: "${job.message}"`)
+    logger.info({ userId: job.userId, message: job.message }, 'Enqueued notification')
   } catch (err: any) {
-    console.error('[Queue] Failed to enqueue notification:', err.message)
+    logger.error({ err: err.message, userId: job.userId }, 'Failed to enqueue notification')
     throw err
   }
 }
-
-
-// Starts the background worker to pop and process notification jobs.
 
 export async function startNotificationWorker(payload: Payload) {
   if (workerStarted) return
@@ -41,53 +36,44 @@ export async function startNotificationWorker(payload: Payload) {
 
   payload.logger.info('[Queue] Starting notification background worker...')
 
-    ; (async () => {
-      const redis = await ensureRedis()
+  ;(async () => {
+    const redis = await ensureRedis()
 
-      while (true) {
-        try {
-          // Atomic reliable queue pattern using brpoplpush
-          const rawJob = await redis.brpoplpush(QUEUE_KEY, PROCESSING_KEY, 5)
+    while (true) {
+      try {
+        const rawJob = await redis.brpoplpush(QUEUE_KEY, PROCESSING_KEY, 5)
 
-          if (rawJob) {
-            const job: NotificationJob = JSON.parse(rawJob)
-            payload.logger.info(`[Queue] Processing notification for user ${job.userId}`)
+        if (rawJob) {
+          const job: NotificationJob = JSON.parse(rawJob)
+          payload.logger.info(`[Queue] Processing notification for user ${job.userId}`)
 
-            try {
-              await payload.create({
-                collection: 'notifications',
-                data: {
-                  userId: job.userId,
-                  message: job.message,
-                  type: job.type,
-                },
-              })
+          try {
+            await payload.create({
+              collection: 'notifications',
+              data: {
+                userId: job.userId,
+                message: job.message,
+                type: job.type,
+              },
+            })
 
-              // Remove from processing queue on success
-              await redis.lrem(PROCESSING_KEY, 1, rawJob)
-              payload.logger.info(`[Queue] Successfully processed notification for user ${job.userId}`)
-
-              // Update success counter
-              await redis.incr('metrics:queue:notifications:success')
-            } catch (jobErr: any) {
-              payload.logger.error(`[Queue] Error processing notification: ${jobErr.message}`)
-              await redis.incr('metrics:queue:notifications:failure')
-
-              // Move to failed list
-              await redis.lpush(FAILED_KEY, JSON.stringify({ job, error: jobErr.message }))
-              await redis.lrem(PROCESSING_KEY, 1, rawJob)
-            }
+            await redis.lrem(PROCESSING_KEY, 1, rawJob)
+            payload.logger.info(`[Queue] Successfully processed notification for user ${job.userId}`)
+            await redis.incr('metrics:queue:notifications:success')
+          } catch (jobErr: any) {
+            payload.logger.error(`[Queue] Error processing notification: ${jobErr.message}`)
+            await redis.incr('metrics:queue:notifications:failure')
+            await redis.lpush(FAILED_KEY, JSON.stringify({ job, error: jobErr.message }))
+            await redis.lrem(PROCESSING_KEY, 1, rawJob)
           }
-        } catch (loopErr: any) {
-          payload.logger.error(`[Queue] Worker error loop: ${loopErr.message}`)
-          await new Promise((resolve) => setTimeout(resolve, 5000))
         }
+      } catch (loopErr: any) {
+        logger.error({ err: loopErr.message }, 'Queue worker error loop')
+        await new Promise((resolve) => setTimeout(resolve, 5000))
       }
-    })()
+    }
+  })()
 }
-
-
-// Gets queue statistics for monitoring.
 
 export async function getQueueMetrics() {
   try {

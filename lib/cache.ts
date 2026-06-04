@@ -1,10 +1,8 @@
 import { createHash } from 'crypto'
 import type { Redis } from 'ioredis'
 import { ensureRedis } from './redis'
+import { logger } from './logger'
 
-// ---------------------------------------------------------------------------
-// TTLs per collection (seconds)
-// ---------------------------------------------------------------------------
 export const CACHE_TTL = {
   tasks: 300,
   users: 300,
@@ -14,9 +12,6 @@ export const CACHE_TTL = {
 
 export type CollectionSlug = keyof typeof CACHE_TTL
 
-// ---------------------------------------------------------------------------
-// Key builders
-// ---------------------------------------------------------------------------
 export function docKey(collection: string, id: string | number): string {
   return `${collection}:doc:${id}`
 }
@@ -31,34 +26,24 @@ export function versionKey(collection: string): string {
   return `${collection}:version`
 }
 
-// ---------------------------------------------------------------------------
-// Bump the list-version counter – invalidates every list cache for the
-// collection without having to scan / delete keys one by one.
-// ---------------------------------------------------------------------------
 export async function bumpListVersion(collection: string): Promise<void> {
   try {
     const redis = await ensureRedis()
     await redis.incr(versionKey(collection))
   } catch (err) {
-    console.warn(`[Cache] Fail to bump list version for collection "${collection}":`, err)
+    logger.warn({ err, collection }, 'Fail to bump list version for collection')
   }
 }
 
-// ---------------------------------------------------------------------------
-// Delete a single document cache.
-// ---------------------------------------------------------------------------
 export async function evictDoc(collection: string, id: string | number): Promise<void> {
   try {
     const redis = await ensureRedis()
     await redis.del(docKey(collection, id))
   } catch (err) {
-    console.warn(`[Cache] Fail to evict doc cache for "${collection}:${id}":`, err)
+    logger.warn({ err, collection, id }, 'Fail to evict doc cache')
   }
 }
 
-// ---------------------------------------------------------------------------
-// Invalidate ALL cache entries for a collection (both doc + list).
-// ---------------------------------------------------------------------------
 export async function invalidateCollection(collection: string, id?: string | number): Promise<void> {
   if (id) {
     await evictDoc(collection, id)
@@ -66,10 +51,6 @@ export async function invalidateCollection(collection: string, id?: string | num
   await bumpListVersion(collection)
 }
 
-// ---------------------------------------------------------------------------
-// Cache-aside helper – checks Redis first, falls back to the provided
-// fetcher callback, then stores the result in Redis with the given TTL.
-// ---------------------------------------------------------------------------
 export async function cacheAside<T>(
   key: string,
   fetcher: () => Promise<T>,
@@ -79,7 +60,7 @@ export async function cacheAside<T>(
   try {
     redis = await ensureRedis()
   } catch (err) {
-    console.warn(`[Cache] Redis client unavailable:`, err)
+    logger.warn({ err }, 'Redis client unavailable — skipping cache')
     return fetcher()
   }
 
@@ -89,7 +70,7 @@ export async function cacheAside<T>(
       return JSON.parse(cached) as T
     }
   } catch (err) {
-    console.warn(`[Cache] Fail to retrieve from cache for key "${key}":`, err)
+    logger.warn({ err, key }, 'Fail to retrieve from cache')
   }
 
   const data = await fetcher()
@@ -97,7 +78,7 @@ export async function cacheAside<T>(
   try {
     await redis.set(key, JSON.stringify(data), 'EX', ttl)
   } catch (err) {
-    console.warn(`[Cache] Fail to store in cache for key "${key}":`, err)
+    logger.warn({ err, key }, 'Fail to store in cache')
   }
 
   return data

@@ -36,6 +36,18 @@ export const Users: CollectionConfig = {
   },
   fields: [
     {
+      name: 'fullName',
+      type: 'text',
+      admin: {
+        hidden: true,
+      },
+      hooks: {
+        beforeChange: [
+          () => null,
+        ],
+      },
+    },
+    {
       name: 'firstName',
       type: 'text',
     },
@@ -70,6 +82,12 @@ export const Users: CollectionConfig = {
   ],
 
   hooks: {
+    afterRead: [
+      ({ doc }) => {
+        doc.fullName = [doc.firstName, doc.lastName].filter(Boolean).join(' ') || doc.email
+        return doc
+      },
+    ],
     afterChange: [
       async ({ doc }) => {
         await invalidateCollection('users', doc.id);
