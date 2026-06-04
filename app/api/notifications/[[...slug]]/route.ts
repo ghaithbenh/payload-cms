@@ -1,6 +1,7 @@
 import { cacheAside, listKey, CACHE_TTL } from '@/lib/cache'
 import { authenticateRequest, checkRateLimit, parseQueryParams, unauthorizedResponse, errorResponse } from '@/lib/api-helpers'
 import type { Where } from 'payload'
+import type { User } from '@/payload-types'
 import { REST_POST, REST_DELETE, REST_PATCH, REST_PUT, REST_OPTIONS, REST_GET } from '@payloadcms/next/routes'
 import payloadConfig from '@payload-config'
 
@@ -17,7 +18,7 @@ async function withAuthAndRateLimit(method: Function, request: Request, context:
     return unauthorizedResponse()
   }
 
-  const { headers: rateLimitHeaders, response: rateLimitResponse } = await checkRateLimit(request, { prefix: 'notifications', role: (user as any).role })
+  const { headers: rateLimitHeaders, response: rateLimitResponse } = await checkRateLimit(request, { prefix: 'notifications', role: (user as User).role })
   if (rateLimitResponse) return rateLimitResponse
 
   const resolvedParams = await context.params
@@ -41,7 +42,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug?: 
       return unauthorizedResponse()
     }
 
-    const userRole = (user as any).role
+    const userRole = (user as User).role
     const { headers: rateLimitHeaders, response: rateLimitResponse } = await checkRateLimit(request, { prefix: 'notifications', role: userRole })
     if (rateLimitResponse) return rateLimitResponse
 
@@ -77,7 +78,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug?: 
     }
 
     const cacheKey = listKey('notifications', {
-      userId: (user as any).id,
+      userId: (user as User).id,
       userRole,
       where,
       limit,

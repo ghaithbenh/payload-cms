@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { GET } from '../monitoring/queue/route'
 import { authenticateRequest, unauthorizedResponse, forbiddenResponse, errorResponse } from '@/lib/api-helpers'
 import { getQueueMetrics } from '@/lib/queue'
+import type { Payload } from 'payload'
+import type { User } from '@/payload-types'
 
 vi.mock('@/lib/api-helpers', () => ({
   authenticateRequest: vi.fn(),
@@ -20,7 +22,7 @@ describe('Monitoring Queue Route', () => {
   })
 
   it('returns 401 if unauthenticated', async () => {
-    vi.mocked(authenticateRequest).mockResolvedValueOnce({ payload: {} as any, user: null })
+    vi.mocked(authenticateRequest).mockResolvedValueOnce({ payload: {} as unknown as Payload, user: null })
     const req = new Request('http://localhost/api/monitoring/queue')
     const res = await GET(req)
     expect(res.status).toBe(401)
@@ -29,8 +31,8 @@ describe('Monitoring Queue Route', () => {
 
   it('returns 403 if authenticated but not admin', async () => {
     vi.mocked(authenticateRequest).mockResolvedValueOnce({
-      payload: {} as any,
-      user: { id: 'u1', role: 'user' } as any,
+      payload: {} as unknown as Payload,
+      user: { id: 'u1', role: 'user' } as User,
     })
     const req = new Request('http://localhost/api/monitoring/queue')
     const res = await GET(req)
@@ -40,11 +42,11 @@ describe('Monitoring Queue Route', () => {
 
   it('returns metrics if authenticated as admin', async () => {
     vi.mocked(authenticateRequest).mockResolvedValueOnce({
-      payload: {} as any,
-      user: { id: 'u1', role: 'admin' } as any,
+      payload: {} as unknown as Payload,
+      user: { id: 'u1', role: 'admin' } as User,
     })
     const mockMetrics = { queueLength: 5, workerActive: true }
-    vi.mocked(getQueueMetrics).mockResolvedValueOnce(mockMetrics as any)
+    vi.mocked(getQueueMetrics).mockResolvedValueOnce(mockMetrics as unknown as Awaited<ReturnType<typeof getQueueMetrics>>)
 
     const req = new Request('http://localhost/api/monitoring/queue')
     const res = await GET(req)

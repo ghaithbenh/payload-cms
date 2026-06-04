@@ -1,5 +1,6 @@
 import { authenticateRequest, unauthorizedResponse, forbiddenResponse, errorResponse } from '@/lib/api-helpers'
 import { getQueueMetrics } from '@/lib/queue'
+import type { User } from '@/payload-types'
 
 export async function GET(request: Request) {
   try {
@@ -9,7 +10,7 @@ export async function GET(request: Request) {
       return unauthorizedResponse()
     }
 
-    if ((user as any).role !== 'admin') {
+    if ((user as User).role !== 'admin') {
       return forbiddenResponse()
     }
 

@@ -3,6 +3,8 @@ import { EventEmitter } from 'events'
 import { GET } from '../tasks/subscribe/route'
 import { authenticateRequest, unauthorizedResponse } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import type { Payload } from 'payload'
+import type { User } from '@/payload-types'
 
 vi.mock('@/lib/api-helpers', () => ({
   authenticateRequest: vi.fn(),
@@ -32,7 +34,7 @@ describe('Tasks Subscribe SSE Route', () => {
   })
 
   it('returns 401 if unauthenticated', async () => {
-    vi.mocked(authenticateRequest).mockResolvedValueOnce({ payload: {} as any, user: null })
+    vi.mocked(authenticateRequest).mockResolvedValueOnce({ payload: {} as unknown as Payload, user: null })
     const req = new Request('http://localhost/api/tasks/subscribe')
     const res = await GET(req)
     expect(res.status).toBe(401)
@@ -64,8 +66,8 @@ describe('Tasks Subscribe SSE Route', () => {
     }
 
     vi.mocked(authenticateRequest).mockResolvedValueOnce({
-      payload: mockPayload as any,
-      user: mockUser as any,
+      payload: mockPayload as unknown as Payload,
+      user: mockUser as unknown as User,
     })
 
     const controller = new AbortController()
@@ -164,8 +166,8 @@ describe('Tasks Subscribe SSE Route', () => {
     }
 
     vi.mocked(authenticateRequest).mockResolvedValueOnce({
-      payload: mockPayload as any,
-      user: mockUser as any,
+      payload: mockPayload as unknown as Payload,
+      user: mockUser as unknown as User,
     })
 
     const controller = new AbortController()
@@ -195,8 +197,8 @@ describe('Tasks Subscribe SSE Route', () => {
     }
 
     vi.mocked(authenticateRequest).mockResolvedValueOnce({
-      payload: mockPayload as any,
-      user: mockUser as any,
+      payload: mockPayload as unknown as Payload,
+      user: mockUser as unknown as User,
     })
 
     const controller = new AbortController()

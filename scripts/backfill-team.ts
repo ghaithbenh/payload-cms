@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
+import type { User } from '@/payload-types'
 
 async function backfillTeam() {
   const payloadConfig = await config
@@ -20,7 +21,7 @@ async function backfillTeam() {
   for (const task of tasks.docs) {
     const assignedId =
       typeof task.assignedTo === 'object'
-        ? (task.assignedTo as any)?.id
+        ? (task.assignedTo as User)?.id
         : task.assignedTo
 
     if (!assignedId) continue
@@ -31,7 +32,7 @@ async function backfillTeam() {
       depth: 0,
     })
 
-    const managerId = (assignedUser as any)?.manager
+    const managerId = (assignedUser as User)?.manager
     if (!managerId) continue
 
     await payload.update({

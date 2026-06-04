@@ -1,5 +1,7 @@
 import { authenticateRequest, unauthorizedResponse } from '@/lib/api-helpers'
 import { logger } from '@/lib/logger'
+import type { User, Task } from '@/payload-types'
+import type { Connection } from 'mongoose'
 
 export async function GET(request: Request) {
   try {
@@ -24,7 +26,7 @@ export async function GET(request: Request) {
           }
         }
 
-        send({ type: 'connected', userId: (user as any).id })
+        send({ type: 'connected', userId: (user as User).id })
 
         const heartbeat = setInterval(() => send({ type: 'ping' }), 15000)
 
@@ -47,13 +49,13 @@ export async function GET(request: Request) {
             try {
               const result = await payload.find({
                 collection: 'tasks',
-                where: { assignedTo: { equals: (user as any).id } },
+                where: { assignedTo: { equals: (user as User).id } },
                 depth: 2,
                 limit: 100,
                 sort: '-updatedAt',
               })
 
-              const docs = result.docs as any[] || []
+              const docs = result.docs as Task[] || []
               const incoming = new Set(docs.map((t: any) => t.id))
 
               if (knownIds.size > 0) {
@@ -84,7 +86,7 @@ export async function GET(request: Request) {
         }
 
         try {
-          const connection = (payload.db as any).connection
+          const connection = (payload.db as { connection: Connection }).connection
           const collection = connection.collection('tasks')
           const changeStream = collection.watch([], { fullDocument: 'updateLookup' })
 
@@ -109,10 +111,10 @@ export async function GET(request: Request) {
 
               const assignedId =
                 typeof task.assignedTo === 'object'
-                  ? (task.assignedTo as any)?.id
+                  ? (task.assignedTo as User)?.id
                   : task.assignedTo
 
-              if (assignedId !== (user as any).id) return
+              if (assignedId !== (user as User).id) return
 
               send({ type: 'task:updated', task })
             } catch (err) {

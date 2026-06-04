@@ -75,10 +75,10 @@ export function forbiddenResponse(message = 'Forbidden') {
 export function errorResponse(error: unknown) {
   const message = error instanceof Error ? error.message : 'Internal Server Error'
   const status = error instanceof Error && 'statusCode' in error
-    ? (error as any).statusCode
+    ? (error as { statusCode?: number }).statusCode!
     : 500
   const code = error instanceof Error && 'code' in error
-    ? (error as any).code
+    ? (error as { code?: string }).code!
     : 'INTERNAL_ERROR'
 
   if (status >= 500) {

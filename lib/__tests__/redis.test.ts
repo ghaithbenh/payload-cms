@@ -15,7 +15,7 @@ const { mockRedisConstructor, mockRedisInstance } = vi.hoisted(() => {
 vi.mock('ioredis', () => {
   return {
     default: class MockRedis {
-      constructor(...args) {
+      constructor(...args: ConstructorParameters<typeof import('ioredis').default>) {
         mockRedisConstructor(...args)
       }
       on = mockRedisInstance.on
@@ -133,7 +133,7 @@ describe('redis client helper', () => {
     const { getRedis } = await import('../redis')
     getRedis()
     const calls = mockRedisConstructor.mock.calls
-    const opts = calls[calls.length - 1][1] as any
+    const opts = calls[calls.length - 1][1] as { retryStrategy: (n: number) => number | null }
     expect(opts.retryStrategy(5)).toBe(1000)
     expect(opts.retryStrategy(11)).toBeNull()
   })
@@ -145,7 +145,7 @@ describe('redis client helper', () => {
     const { getRedis } = await import('../redis')
     getRedis()
     const calls = mockRedisConstructor.mock.calls
-    const opts = calls[calls.length - 1][0] as any
+    const opts = calls[calls.length - 1][0] as { retryStrategy: (n: number) => number | null }
     expect(opts.retryStrategy(5)).toBe(1000)
     expect(opts.retryStrategy(11)).toBeNull()
   })
@@ -156,7 +156,7 @@ describe('redis client helper', () => {
     const { getRedis } = await import('../redis')
     getRedis()
     const calls = mockRedisConstructor.mock.calls
-    const opts = calls[calls.length - 1][0] as any
+    const opts = calls[calls.length - 1][0] as { retryStrategy: (n: number) => number | null }
     expect(opts.retryStrategy(5)).toBe(1000)
     expect(opts.retryStrategy(11)).toBeNull()
   })

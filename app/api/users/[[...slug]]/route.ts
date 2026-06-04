@@ -1,6 +1,7 @@
 import { cacheAside, listKey, CACHE_TTL } from '@/lib/cache'
 import { authenticateRequest, checkRateLimit, parseQueryParams, unauthorizedResponse, errorResponse } from '@/lib/api-helpers'
 import type { Where } from 'payload'
+import type { User } from '@/payload-types'
 import { REST_POST, REST_DELETE, REST_PATCH, REST_PUT, REST_OPTIONS, REST_GET } from '@payloadcms/next/routes'
 import payloadConfig from '@payload-config'
 
@@ -21,7 +22,7 @@ async function withAuthAndRateLimit(method: Function, request: Request, context:
     return unauthorizedResponse()
   }
 
-  const { headers: rateLimitHeaders, response: rateLimitResponse } = await checkRateLimit(request, { prefix: 'users', role: user ? (user as any).role : undefined })
+  const { headers: rateLimitHeaders, response: rateLimitResponse } = await checkRateLimit(request, { prefix: 'users', role: user ? (user as User).role : undefined })
   if (rateLimitResponse) return rateLimitResponse
 
   const newParams = Promise.resolve({ ...resolvedParams, slug: ['users', ...slug] })
@@ -43,7 +44,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug?: 
       return unauthorizedResponse()
     }
 
-    const userRole = (user as any).role
+    const userRole = (user as User).role
     const { headers: rateLimitHeaders, response: rateLimitResponse } = await checkRateLimit(request, { prefix: 'users', role: userRole })
     if (rateLimitResponse) return rateLimitResponse
 
@@ -79,7 +80,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug?: 
     }
 
     const cacheKey = listKey('users', {
-      userId: (user as any).id,
+      userId: (user as User).id,
       userRole,
       where,
       limit,

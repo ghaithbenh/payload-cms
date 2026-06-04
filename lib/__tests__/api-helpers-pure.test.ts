@@ -25,6 +25,7 @@ import {
 } from '../api-helpers'
 import { getPayload } from 'payload'
 import { rateLimit } from '../rateLimit'
+import type { Payload } from 'payload'
 
 describe('buildRateLimitHeaders', () => {
   it('returns all required rate limit headers', () => {
@@ -115,7 +116,7 @@ describe('errorResponse', () => {
 describe('getPayloadClient', () => {
   it('calls getPayload with configuration', async () => {
     const mockPayload = {}
-    vi.mocked(getPayload).mockResolvedValueOnce(mockPayload as any)
+    vi.mocked(getPayload).mockResolvedValueOnce(mockPayload as unknown as Payload)
     const client = await getPayloadClient()
     expect(client).toBe(mockPayload)
     expect(getPayload).toHaveBeenCalled()
@@ -128,7 +129,7 @@ describe('authenticateRequest', () => {
     const mockPayload = {
       auth: vi.fn().mockResolvedValueOnce({ user: mockUser }),
     }
-    vi.mocked(getPayload).mockResolvedValueOnce(mockPayload as any)
+    vi.mocked(getPayload).mockResolvedValueOnce(mockPayload as unknown as Payload)
 
     const req = new Request('http://localhost/api/tasks', {
       headers: { Authorization: 'Bearer token' },
@@ -143,7 +144,7 @@ describe('authenticateRequest', () => {
     const mockPayload = {
       auth: vi.fn().mockRejectedValueOnce(new Error('Auth failed')),
     }
-    vi.mocked(getPayload).mockResolvedValueOnce(mockPayload as any)
+    vi.mocked(getPayload).mockResolvedValueOnce(mockPayload as unknown as Payload)
 
     const req = new Request('http://localhost/api/tasks')
     const res = await authenticateRequest(req)

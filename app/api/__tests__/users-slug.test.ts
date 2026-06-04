@@ -39,6 +39,8 @@ vi.mock('@/lib/cache', () => ({
 import { GET, POST, PATCH, PUT, DELETE, OPTIONS } from '../users/[[...slug]]/route'
 import { authenticateRequest, checkRateLimit, parseQueryParams } from '@/lib/api-helpers'
 import { cacheAside } from '@/lib/cache'
+import type { Payload } from 'payload'
+import type { User } from '@/payload-types'
 
 describe('Users Slug Routes', () => {
   beforeEach(() => {
@@ -47,7 +49,7 @@ describe('Users Slug Routes', () => {
 
   describe('GET Handler', () => {
     it('returns 401 if unauthenticated', async () => {
-      vi.mocked(authenticateRequest).mockResolvedValueOnce({ payload: {} as any, user: null })
+      vi.mocked(authenticateRequest).mockResolvedValueOnce({ payload: {} as unknown as Payload, user: null })
       const req = new Request('http://localhost/api/users')
       const res = await GET(req, { params: Promise.resolve({ slug: [] }) })
       expect(res.status).toBe(401)
@@ -55,8 +57,8 @@ describe('Users Slug Routes', () => {
 
     it('returns rate limit response if checkRateLimit returns response', async () => {
       vi.mocked(authenticateRequest).mockResolvedValueOnce({
-        payload: {} as any,
-        user: { id: 'u1', role: 'user' } as any,
+        payload: {} as unknown as Payload,
+        user: { id: 'u1', role: 'user' } as User,
       })
       vi.mocked(checkRateLimit).mockResolvedValueOnce({
         response: new Response('rate-limited', { status: 429 }),
@@ -69,8 +71,8 @@ describe('Users Slug Routes', () => {
 
     it('delegates to REST_GET if slug is present', async () => {
       vi.mocked(authenticateRequest).mockResolvedValueOnce({
-        payload: {} as any,
-        user: { id: 'u1', role: 'user' } as any,
+        payload: {} as unknown as Payload,
+        user: { id: 'u1', role: 'user' } as User,
       })
       vi.mocked(checkRateLimit).mockResolvedValueOnce({
         response: null,
@@ -84,14 +86,14 @@ describe('Users Slug Routes', () => {
 
     it('delegates to REST_GET and handles response without headers.set function', async () => {
       vi.mocked(authenticateRequest).mockResolvedValueOnce({
-        payload: {} as any,
-        user: { id: 'u1', role: 'user' } as any,
+        payload: {} as unknown as Payload,
+        user: { id: 'u1', role: 'user' } as User,
       })
       vi.mocked(checkRateLimit).mockResolvedValueOnce({
         response: null,
         headers: { 'X-Test': 'val' },
       })
-      mockPayloadMethod.mockResolvedValueOnce({} as any)
+      mockPayloadMethod.mockResolvedValueOnce({} as unknown as Response)
       const req = new Request('http://localhost/api/users/123')
       const res = await GET(req, { params: Promise.resolve({ slug: ['123'] }) })
       expect(res).toEqual({})
@@ -99,8 +101,8 @@ describe('Users Slug Routes', () => {
 
     it('handles undefined slug parameter in GET', async () => {
       vi.mocked(authenticateRequest).mockResolvedValueOnce({
-        payload: { find: vi.fn().mockResolvedValue({ docs: [] }) } as any,
-        user: { id: 'u1', role: 'user' } as any,
+        payload: { find: vi.fn().mockResolvedValue({ docs: [] }) } as unknown as Payload,
+        user: { id: 'u1', role: 'user' } as User,
       })
       vi.mocked(checkRateLimit).mockResolvedValueOnce({
         response: null,
@@ -114,8 +116,8 @@ describe('Users Slug Routes', () => {
     it('calls payload.find and returns JSON if slug is empty', async () => {
       const mockFind = vi.fn().mockResolvedValue({ docs: [] })
       vi.mocked(authenticateRequest).mockResolvedValueOnce({
-        payload: { find: mockFind } as any,
-        user: { id: 'u1', role: 'user' } as any,
+        payload: { find: mockFind } as unknown as Payload,
+        user: { id: 'u1', role: 'user' } as User,
       })
       vi.mocked(checkRateLimit).mockResolvedValueOnce({
         response: null,
@@ -157,14 +159,14 @@ describe('Users Slug Routes', () => {
 
     methods.forEach(({ name, handler }) => {
       it(`${name} - returns 401 if unauthenticated and not public route`, async () => {
-        vi.mocked(authenticateRequest).mockResolvedValueOnce({ payload: {} as any, user: null })
+        vi.mocked(authenticateRequest).mockResolvedValueOnce({ payload: {} as unknown as Payload, user: null })
         const req = new Request('http://localhost/api/users/profile')
         const res = await handler(req, { params: Promise.resolve({ slug: ['profile'] }) })
         expect(res.status).toBe(401)
       })
 
       it(`${name} - passes and delegates if unauthenticated but public route`, async () => {
-        vi.mocked(authenticateRequest).mockResolvedValueOnce({ payload: {} as any, user: null })
+        vi.mocked(authenticateRequest).mockResolvedValueOnce({ payload: {} as unknown as Payload, user: null })
         vi.mocked(checkRateLimit).mockResolvedValueOnce({ response: null, headers: {} })
         const req = new Request('http://localhost/api/users/login')
         const res = await handler(req, { params: Promise.resolve({ slug: ['login'] }) })
@@ -174,8 +176,8 @@ describe('Users Slug Routes', () => {
 
       it(`${name} - returns rate limit response if rate-limited`, async () => {
         vi.mocked(authenticateRequest).mockResolvedValueOnce({
-          payload: {} as any,
-          user: { id: 'u1', role: 'user' } as any,
+          payload: {} as unknown as Payload,
+          user: { id: 'u1', role: 'user' } as User,
         })
         vi.mocked(checkRateLimit).mockResolvedValueOnce({
           response: new Response('rate-limited', { status: 429 }),
@@ -188,8 +190,8 @@ describe('Users Slug Routes', () => {
 
       it(`${name} - delegates to payload method with rate limit headers`, async () => {
         vi.mocked(authenticateRequest).mockResolvedValueOnce({
-          payload: {} as any,
-          user: { id: 'u1', role: 'user' } as any,
+          payload: {} as unknown as Payload,
+          user: { id: 'u1', role: 'user' } as User,
         })
         vi.mocked(checkRateLimit).mockResolvedValueOnce({
           response: null,
@@ -203,8 +205,8 @@ describe('Users Slug Routes', () => {
 
       it(`${name} - applies rate limit headers to response with working headers`, async () => {
         vi.mocked(authenticateRequest).mockResolvedValueOnce({
-          payload: {} as any,
-          user: { id: 'u1', role: 'user' } as any,
+          payload: {} as unknown as Payload,
+          user: { id: 'u1', role: 'user' } as User,
         })
         vi.mocked(checkRateLimit).mockResolvedValueOnce({
           response: null,
@@ -221,8 +223,8 @@ describe('Users Slug Routes', () => {
 
       it(`${name} - handles null response from payload method`, async () => {
         vi.mocked(authenticateRequest).mockResolvedValueOnce({
-          payload: {} as any,
-          user: { id: 'u1', role: 'user' } as any,
+          payload: {} as unknown as Payload,
+          user: { id: 'u1', role: 'user' } as User,
         })
         vi.mocked(checkRateLimit).mockResolvedValueOnce({
           response: null,
@@ -236,14 +238,14 @@ describe('Users Slug Routes', () => {
 
       it(`${name} - handles response without headers.set function`, async () => {
         vi.mocked(authenticateRequest).mockResolvedValueOnce({
-          payload: {} as any,
-          user: { id: 'u1', role: 'user' } as any,
+          payload: {} as unknown as Payload,
+          user: { id: 'u1', role: 'user' } as User,
         })
         vi.mocked(checkRateLimit).mockResolvedValueOnce({
           response: null,
           headers: { 'X-RateLimit-Limit': '10' },
         })
-        mockPayloadMethod.mockResolvedValueOnce({} as any)
+        mockPayloadMethod.mockResolvedValueOnce({} as unknown as Response)
         const req = new Request('http://localhost/api/users')
         const res = await handler(req, { params: Promise.resolve({ slug: ['123'] }) })
         expect(res).toEqual({})
@@ -251,8 +253,8 @@ describe('Users Slug Routes', () => {
 
       it(`${name} - handles undefined slug parameter`, async () => {
         vi.mocked(authenticateRequest).mockResolvedValueOnce({
-          payload: {} as any,
-          user: { id: 'u1', role: 'user' } as any,
+          payload: {} as unknown as Payload,
+          user: { id: 'u1', role: 'user' } as User,
         })
         vi.mocked(checkRateLimit).mockResolvedValueOnce({
           response: null,

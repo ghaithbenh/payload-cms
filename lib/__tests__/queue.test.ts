@@ -27,6 +27,7 @@ vi.mock('../logger', () => ({
 import { enqueueNotification, startNotificationWorker, getQueueMetrics } from '../queue'
 import { ensureRedis } from '../redis'
 import { logger } from '../logger'
+import type { Payload } from 'payload'
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -62,7 +63,7 @@ describe('queue', () => {
         create: vi.fn()
           .mockResolvedValueOnce({ id: 'notif-1' }) // first job succeeds
           .mockRejectedValueOnce(new Error('DB error')), // second job fails
-      } as any
+      } as unknown as Payload
 
       const successJob = { userId: 'user-2', message: 'Success', type: 'success' as const }
       const failJob = { userId: 'user-3', message: 'Failed', type: 'error' as const }

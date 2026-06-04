@@ -3,7 +3,7 @@ import { getClientIp, getRoleLimits, ROLE_LIMITS } from '../rateLimit'
 
 describe('getClientIp', () => {
   function mockRequest(headers: Record<string, string>): Request {
-    return { headers: { get: (name: string) => headers[name.toLowerCase()] ?? null } } as any
+    return { headers: { get: (name: string) => headers[name.toLowerCase()] ?? null } } as unknown as Request
   }
 
   it('extracts IP from x-forwarded-for', () => {

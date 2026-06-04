@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getClientIp, getRoleLimits, ROLE_LIMITS } from '../rateLimit'
+import { getClientIp, getRoleLimits, ROLE_LIMITS, type UserRole } from '../rateLimit'
 
 describe('getClientIp', () => {
   function mockRequest(headers: Record<string, string>): Request {
@@ -10,7 +10,7 @@ describe('getClientIp', () => {
           return headers[lower] ?? null
         },
       },
-    } as any
+    } as unknown as Request
   }
 
   it('extracts first IP from multi-value x-forwarded-for', () => {
@@ -62,7 +62,7 @@ describe('getRoleLimits', () => {
   })
 
   it('defaults to user tier for unknown role string', () => {
-    expect(getRoleLimits('superadmin' as any)).toEqual({ limit: 100, windowSeconds: 60 })
+    expect(getRoleLimits('superadmin' as UserRole)).toEqual({ limit: 100, windowSeconds: 60 })
   })
 })
 
