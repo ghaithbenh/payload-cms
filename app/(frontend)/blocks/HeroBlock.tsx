@@ -1,6 +1,9 @@
 import Image from 'next/image'
+import type { Page } from '@/payload-types'
 
-export function HeroBlock({ block }: { block: any }) {
+type HeroBlockData = Extract<Page['layout'][number], { blockType: 'hero' }>
+
+export function HeroBlock({ block }: { block: HeroBlockData }) {
   const hasImage = block.backgroundImage && typeof block.backgroundImage !== 'string'
   const link = block.link
   let href = ''

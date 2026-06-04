@@ -1,3 +1,4 @@
+import type { Page } from '@/payload-types'
 import { HeroBlock } from './HeroBlock'
 import { ContentBlock } from './ContentBlock'
 import { CallToActionBlock } from './CallToActionBlock'
@@ -10,7 +11,7 @@ const blockComponents = {
   faq: FAQBlock,
 } as const
 
-export function RenderBlocks({ blocks }: { blocks: any[] }) {
+export function RenderBlocks({ blocks }: { blocks: Page['layout'] }) {
   if (!blocks || blocks.length === 0) return null
 
   return (

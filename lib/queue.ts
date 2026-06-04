@@ -24,8 +24,8 @@ export async function enqueueNotification(job: Omit<NotificationJob, 'timestamp'
     }
     await redis.lpush(QUEUE_KEY, JSON.stringify(fullJob))
     logger.info({ userId: job.userId, message: job.message }, 'Enqueued notification')
-  } catch (err: any) {
-    logger.error({ err: err.message, userId: job.userId }, 'Failed to enqueue notification')
+  } catch (err: unknown) {
+    logger.error({ err: err instanceof Error ? err.message : String(err), userId: job.userId }, 'Failed to enqueue notification')
     throw err
   }
 }
@@ -60,15 +60,16 @@ export async function startNotificationWorker(payload: Payload) {
             await redis.lrem(PROCESSING_KEY, 1, rawJob)
             payload.logger.info(`[Queue] Successfully processed notification for user ${job.userId}`)
             await redis.incr('metrics:queue:notifications:success')
-          } catch (jobErr: any) {
-            payload.logger.error(`[Queue] Error processing notification: ${jobErr.message}`)
+          } catch (jobErr: unknown) {
+            const jobErrMsg = jobErr instanceof Error ? jobErr.message : String(jobErr)
+            payload.logger.error(`[Queue] Error processing notification: ${jobErrMsg}`)
             await redis.incr('metrics:queue:notifications:failure')
-            await redis.lpush(FAILED_KEY, JSON.stringify({ job, error: jobErr.message }))
+            await redis.lpush(FAILED_KEY, JSON.stringify({ job, error: jobErrMsg }))
             await redis.lrem(PROCESSING_KEY, 1, rawJob)
           }
         }
-      } catch (loopErr: any) {
-        logger.error({ err: loopErr.message }, 'Queue worker error loop')
+      } catch (loopErr: unknown) {
+        logger.error({ err: loopErr instanceof Error ? loopErr.message : String(loopErr) }, 'Queue worker error loop')
         await new Promise((resolve) => setTimeout(resolve, 5000))
       }
     }
@@ -92,9 +93,9 @@ export async function getQueueMetrics() {
       failureCount,
       workerActive: workerStarted,
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
-      error: err.message,
+      error: err instanceof Error ? err.message : String(err),
       workerActive: workerStarted,
     }
   }

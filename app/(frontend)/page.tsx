@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url'
 
 import config from '@/payload.config'
 import { cacheAside, listKey, CACHE_TTL } from '@/lib/cache'
+import type { Page } from '@/payload-types'
 import './styles.css'
 
 export default async function HomePage() {
@@ -52,7 +53,7 @@ export default async function HomePage() {
               Pages
             </span>
             <ul className="list-none p-0 m-0">
-              {pages.docs.map((page: any, i: number) => (
+              {pages.docs.map((page: Page, i: number) => (
                 <li key={page.id}>
                   <a
                     href={`/${page.slug}`}

@@ -52,8 +52,8 @@ export default function NotificationsPage() {
             setNotifications((prev) =>
                 prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
             );
-        } catch (err: any) {
-            setError(err.message || "Failed to mark notification as read");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to mark notification as read");
             setTimeout(() => setError(null), 4000);
         }
     };

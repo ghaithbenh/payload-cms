@@ -1,4 +1,8 @@
-export function CallToActionBlock({ block }: { block: any }) {
+import type { Page } from '@/payload-types'
+
+type CallToActionBlockData = Extract<Page['layout'][number], { blockType: 'callToAction' }>
+
+export function CallToActionBlock({ block }: { block: CallToActionBlockData }) {
   const isPrimary = (block.variant || 'primary') === 'primary'
   const link = block.link
   let href = ''
