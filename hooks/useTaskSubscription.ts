@@ -71,100 +71,103 @@ export function useTaskSubscription() {
     }
   }, [])
 
-  const connect = useCallback(() => {
-    if (esRef.current) {
-      esRef.current.close()
-      esRef.current = null
-    }
-
-    const es = new EventSource('/api/tasks/subscribe', { withCredentials: true })
-    esRef.current = es
-
-    let authFailed = false
-
-    es.onopen = () => {
-      delayRef.current = 1000
-    }
-
-    es.onmessage = (event) => {
-      try {
-        const data: SSEEvent = JSON.parse(event.data)
-
-        switch (data.type) {
-          case 'connected':
-            setConnected(true)
-            setError(null)
-            fetchInitial()
-            break
-
-          case 'auth_error':
-            authFailed = true
-            setConnected(false)
-            setError(data.message || 'Authentication required')
-            es.close()
-            break
-
-          case 'ping':
-            break
-
-          case 'task:created':
-            if (data.task) {
-              setTasks((prev) => {
-                const exists = prev.some((t) => t.id === data.task!.id)
-                if (exists) return prev
-                return [data.task!, ...prev]
-              })
-              setLastUpdate(new Date())
-              showToast(`New task: "${data.task.title}"`, 'success')
-            }
-            break
-
-          case 'task:updated':
-            if (data.task) {
-              setTasks((prev) => {
-                const idx = prev.findIndex((t) => t.id === data.task!.id)
-                if (idx !== -1) {
-                  const next = [...prev]
-                  next[idx] = data.task!
-                  return next
-                }
-                return [data.task!, ...prev]
-              })
-              setLastUpdate(new Date())
-              showToast(`Updated: "${data.task.title}"`, 'info')
-            }
-            break
-
-          case 'task:deleted':
-            if (data.id) {
-              setTasks((prev) => {
-                const target = prev.find((t) => t.id === data.id)
-                if (target) showToast(`Deleted: "${target.title}"`, 'error')
-                return prev.filter((t) => t.id !== data.id)
-              })
-              setLastUpdate(new Date())
-            }
-            break
-        }
-      } catch {
-        // ignore malformed events
+  const connect = useCallback(
+    function connect() {
+      if (esRef.current) {
+        esRef.current.close()
+        esRef.current = null
       }
-    }
 
-    es.onerror = () => {
-      setConnected(false)
-      es.close()
-      esRef.current = null
+      const es = new EventSource('/api/tasks/subscribe', { withCredentials: true })
+      esRef.current = es
 
-      if (authFailed) return
+      let authFailed = false
 
-      const delay = delayRef.current
-      delayRef.current = Math.min(delay * 2, 16000)
-      setError(`Reconnecting in ${(delay / 1000).toFixed(0)}s...`)
+      es.onopen = () => {
+        delayRef.current = 1000
+      }
 
-      reconnectRef.current = setTimeout(connect, delay)
-    }
-  }, [fetchInitial, showToast])
+      es.onmessage = (event) => {
+        try {
+          const data: SSEEvent = JSON.parse(event.data)
+
+          switch (data.type) {
+            case 'connected':
+              setConnected(true)
+              setError(null)
+              fetchInitial()
+              break
+
+            case 'auth_error':
+              authFailed = true
+              setConnected(false)
+              setError(data.message || 'Authentication required')
+              es.close()
+              break
+
+            case 'ping':
+              break
+
+            case 'task:created':
+              if (data.task) {
+                setTasks((prev) => {
+                  const exists = prev.some((t) => t.id === data.task!.id)
+                  if (exists) return prev
+                  return [data.task!, ...prev]
+                })
+                setLastUpdate(new Date())
+                showToast(`New task: "${data.task.title}"`, 'success')
+              }
+              break
+
+            case 'task:updated':
+              if (data.task) {
+                setTasks((prev) => {
+                  const idx = prev.findIndex((t) => t.id === data.task!.id)
+                  if (idx !== -1) {
+                    const next = [...prev]
+                    next[idx] = data.task!
+                    return next
+                  }
+                  return [data.task!, ...prev]
+                })
+                setLastUpdate(new Date())
+                showToast(`Updated: "${data.task.title}"`, 'info')
+              }
+              break
+
+            case 'task:deleted':
+              if (data.id) {
+                setTasks((prev) => {
+                  const target = prev.find((t) => t.id === data.id)
+                  if (target) showToast(`Deleted: "${target.title}"`, 'error')
+                  return prev.filter((t) => t.id !== data.id)
+                })
+                setLastUpdate(new Date())
+              }
+              break
+          }
+        } catch {
+          // ignore malformed events
+        }
+      }
+
+      es.onerror = () => {
+        setConnected(false)
+        es.close()
+        esRef.current = null
+
+        if (authFailed) return
+
+        const delay = delayRef.current
+        delayRef.current = Math.min(delay * 2, 16000)
+        setError(`Reconnecting in ${(delay / 1000).toFixed(0)}s...`)
+
+        reconnectRef.current = setTimeout(connect, delay)
+      }
+    },
+    [fetchInitial, showToast],
+  )
 
   useEffect(() => {
     connect()
